@@ -1,0 +1,12 @@
+# Node
+node_modules/
+uploads/
+migrations/
+.env
+.env.production
+dist/
+build/
+package-lock.json
+tmp/
+logs/
+.DS_Store

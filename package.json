@@ -1,0 +1,53 @@
+{
+  "name": "connection",
+  "version": "1.0.0",
+  "description": "\"# Webapp_Backend\"",
+  "main": "index.ts",
+  "scripts": {
+    "dev": "nodemon",
+    "start": "cross-env NODE_ENV=production ts-node -r dotenv/config index.ts dotenv_config_path=.env.production",
+    "build": "prisma generate && next build",
+    "postinstall": "prisma generate",
+    "seed": "ts-node prisma/seed.ts"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@hookform/resolvers": "^5.2.0",
+    "@prisma/client": "^6.13.0",
+    "bcrypt": "^5.1.1",
+    "bcryptjs": "^3.0.2",
+    "body-parser": "^2.2.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.5.0",
+    "express": "^4.21.2",
+    "joi": "^17.13.3",
+    "js-cookie": "^3.0.5",
+    "jsonwebtoken": "^9.0.2",
+    "jwt-decode": "^4.0.0",
+    "mssql": "^11.0.1",
+    "multer": "^2.0.1",
+    "nodemailer": "^6.10.0",
+    "react-hook-form": "^7.61.1",
+    "sequelize": "^6.37.7",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+    "winston": "^3.17.0"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.0.3",
+    "nodemon": "^3.1.9",
+    "prisma": "^6.13.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}

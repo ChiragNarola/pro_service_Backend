@@ -1,0 +1,317 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Role {
+  id           String    @id @default(uuid()) @db.Uuid
+  name         RoleName  @unique
+  isActive     Boolean   @default(true)
+  createdBy    String    @db.VarChar(100)
+  createdDate  DateTime  @default(now())
+  modifiedBy   String?   @db.VarChar(100)
+  modifiedDate DateTime?
+
+  users     User[]
+  companyId String? @db.Uuid
+
+  @@index([createdBy])
+  @@index([modifiedBy])
+}
+
+model User {
+  id                     String           @id @default(uuid()) @db.Uuid
+  name                   String           @db.VarChar(100)
+  lastName               String           @db.VarChar(100)
+  email                  String           @unique @db.VarChar(255)
+  password               String?          @db.VarChar(255)
+  mobileNumber           String?          @db.VarChar(20)
+  profilePhotoURL        String?          @db.VarChar(255)
+  invitationToken        String?          @db.VarChar(255)
+  invitationExpiresAt    DateTime?
+  passwordResetToken     String?          @db.VarChar(255)
+  passwordResetExpiresAt DateTime?
+  createdBy              String           @db.VarChar(100)
+  createdDate            DateTime         @default(now())
+  modifiedBy             String?          @db.VarChar(100)
+  modifiedDate           DateTime?
+  roleId                 String?          @db.Uuid
+  role                   Role?            @relation(fields: [roleId], references: [id])
+  status                 UserStatus       
+  CompanyDetail         CompanyDetail[]
+  employeeDetail        EmployeeDetail[]
+  clientDetails         ClientDetail[]
+  companyPlanDetails    CompanyPlanDetail[]
+
+  @@index([email])
+  @@index([roleId])
+  @@index([invitationToken])
+  @@index([passwordResetToken])
+  @@index([createdBy])
+  @@index([modifiedBy])
+}
+
+enum UserStatus {
+  Active     @map("Active")
+  InActive   @map("InActive")
+  Invited    @map("Invited")
+  Deactivate @map("Deactivate")
+}
+
+enum RoleName {
+  SuperAdmin @map("SuperAdmin")
+  Company    @map("Company")
+  Manager    @map("Manager")
+  Client     @map("Client")
+  Employee   @map("Employee")
+}
+
+enum PlanName {
+  Starter      @map("Starter")
+  Professional @map("Professional")
+  Enterprise   @map("Enterprise")
+}
+
+enum SubscriptionType {
+  Monthly @map("Monthly")
+  Annual  @map("Annual")
+}
+
+enum ServiceStatus {
+  Scheduled   @map("Scheduled")
+  InProgress  @map("InProgress")
+  Completed   @map("Completed")
+  Cancelled   @map("Cancelled")
+  OnHold      @map("OnHold")
+  Pending     @map("Pending")
+}
+
+model Module {
+  id           String    @id @default(uuid()) @db.Uuid
+  name         String    @db.VarChar(100)
+  isActive     Boolean   @default(true)
+  createdBy    String    @db.VarChar(100)
+  createdDate  DateTime  @default(now())
+  modifiedBy   String?   @db.VarChar(100)
+  modifiedDate DateTime?
+
+  modulePlanMappings ModulePlanMapping[]
+
+  @@index([createdBy])
+  @@index([modifiedBy])
+}
+
+model Subscription {
+  id           String           @id @default(uuid()) @db.Uuid
+  planName     PlanName        
+  duration     SubscriptionType 
+  rate         Float
+  isActive     Boolean          @default(true)
+  isPopular    Boolean          @default(false)
+  createdBy    String           @db.VarChar(100)
+  createdDate  DateTime         @default(now())
+  modifiedBy   String?          @db.VarChar(100)
+  modifiedDate DateTime?
+
+  modulePlanMappings ModulePlanMapping[]
+  companies CompanyDetail[]
+  companyPlanDetails CompanyPlanDetail[]
+  @@index([createdBy])
+  @@index([modifiedBy])
+}
+
+model ModulePlanMapping {
+  id             String    @id @default(uuid()) @db.Uuid
+  subscriptionId String?   @db.Uuid
+  moduleId       String?   @db.Uuid
+  isActive       Boolean   @default(true)
+  maxEmployees   String?   @db.VarChar(20)
+  createdBy      String    @db.VarChar(100)
+  createdDate    DateTime  @default(now())
+  modifiedBy     String?   @db.VarChar(100)
+  modifiedDate   DateTime?
+
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id])
+  module       Module?       @relation(fields: [moduleId], references: [id])
+
+  @@index([subscriptionId])
+  @@index([moduleId])
+  @@index([createdBy])
+  @@index([modifiedBy])
+}
+
+model CompanyDetail {
+  id                  String    @id @default(uuid()) @db.Uuid
+  userId              String?   @db.Uuid
+  companyName         String    @db.VarChar(100)
+  companyEmail        String    @db.VarChar(255)
+  industry            String?   @db.VarChar(255)
+  companyMobileNumber String?   @db.VarChar(20)
+  address             String    @db.VarChar(255)
+  city                String    @db.VarChar(255)
+  state               String    @db.VarChar(255)
+  planId              String?   @db.Uuid
+  foundedYear         String?   @db.VarChar(10)
+  website             String?   @db.VarChar(100)
+  isActive            Boolean   @default(true)
+  paymentDateTime     DateTime  @default(now())
+  startDateTime       DateTime  @default(now())
+  paymentMethod       String?   @db.VarChar(20)
+  endDateTime         DateTime?
+  createdBy           String    @db.VarChar(100)
+  createdDate         DateTime  @default(now())
+  modifiedBy          String?   @db.VarChar(100)
+  modifiedDate        DateTime?
+
+  user         User?         @relation(fields: [userId], references: [id])
+  subscription Subscription? @relation(fields: [planId], references: [id])
+  employeeDetail     EmployeeDetail[]
+  clientDetails      ClientDetail[]
+  planDetails        CompanyPlanDetail[]
+
+  @@index([planId])
+  @@index([createdBy])
+  @@index([modifiedBy])
+}
+
+// Tracks company subscription/plan assignments with validity window
+model CompanyPlanDetail {
+  id           String   @id @default(uuid()) @db.Uuid
+  companyId    String   @db.Uuid
+  userId       String?  @db.Uuid
+  planId       String   @db.Uuid
+  startDate    DateTime @default(now())
+  endDate      DateTime?
+  isActive     Boolean  @default(true)
+  notes        String?  @db.VarChar(255)
+  createdBy    String   @db.VarChar(100)
+  createdDate  DateTime @default(now())
+  modifiedBy   String?  @db.VarChar(100)
+  modifiedDate DateTime?
+
+  company      CompanyDetail  @relation(fields: [companyId], references: [id])
+  user         User?          @relation(fields: [userId], references: [id])
+  subscription Subscription   @relation(fields: [planId], references: [id])
+
+  @@index([companyId])
+  @@index([userId])
+  @@index([planId])
+  @@index([createdBy])
+  @@index([modifiedBy])
+}
+
+model Department {
+  id        String          @id @default(uuid()) @db.Uuid
+  name      String          @unique @db.VarChar(100)
+  employees EmployeeDetail[] // One-to-many relation with EmployeeDetail
+}
+
+model EmployeeRole {
+  id        String          @id @default(uuid()) @db.Uuid
+  name      String          @unique @db.VarChar(100)
+  employees EmployeeDetail[] // One-to-many relation with EmployeeDetail
+}
+
+model EmployeeDetail {
+  id              String        @id @default(uuid()) @db.Uuid
+  userId          String?       @db.Uuid
+  companyId       String?       @db.Uuid
+  departmentId    String        @db.Uuid
+  employeeRoleId  String        @db.Uuid
+  employeeStatus  UserStatus    @default(Active)
+  address         String?       @db.VarChar(255)
+  city            String?       @db.VarChar(255)
+  state           String?       @db.VarChar(255)
+  joinDate        DateTime      @default(now())
+  ReleivingDate   DateTime?
+  createdBy       String        @db.VarChar(100)
+  createdDate     DateTime      @default(now())
+  modifiedBy      String?       @db.VarChar(100)
+  modifiedDate    DateTime?
+  managerId       String?        @db.Uuid
+  salary          String?        @db.VarChar(100)
+  skills          String?        @db.VarChar(100)
+  eid             String?        @db.VarChar(100)
+
+  manager      EmployeeDetail?   @relation("ManagerEmployees", fields: [managerId], references: [id])
+  subordinates EmployeeDetail[]  @relation("ManagerEmployees")
+  user            User?         @relation(fields: [userId], references: [id])
+  CompanyDetail   CompanyDetail? @relation(fields: [companyId], references: [id])
+  department      Department    @relation(fields: [departmentId], references: [id])
+  employeeRole    EmployeeRole  @relation(fields: [employeeRoleId], references: [id])
+
+  @@index([userId])
+  @@index([companyId])
+  @@index([departmentId])
+  @@index([employeeRoleId])
+}
+
+model ClientDetail {
+  id              String        @id @default(uuid()) @db.Uuid
+  userId          String?       @db.Uuid
+  companyId       String?       @db.Uuid
+  clientCompanyName      String        @db.VarChar(100)
+  clientStatus    UserStatus    @default(Active)
+  address         String?       @db.VarChar(255)
+  city            String?       @db.VarChar(255)
+  state           String?       @db.VarChar(255)
+  notes           String?       @db.VarChar(255)
+  inviteDate      DateTime      @default(now())
+  joinDate        DateTime      @default(now())
+  createdBy       String        @db.VarChar(100)
+  createdDate     DateTime      @default(now())
+  modifiedBy      String?       @db.VarChar(100)
+  modifiedDate    DateTime?
+
+  user            User?         @relation(fields: [userId], references: [id])
+  CompanyDetail   CompanyDetail? @relation(fields: [companyId], references: [id])
+  clientServices  ClientService[]
+
+  @@index([userId])
+  @@index([companyId])
+  @@index([createdBy])
+  @@index([modifiedBy])
+}
+
+model Services {
+  id              String        @id @default(uuid()) @db.Uuid
+  serviceName     String        @db.VarChar(100)
+  createdBy       String        @db.VarChar(100)
+  createdDate     DateTime      @default(now())
+  modifiedBy      String?       @db.VarChar(100)
+  modifiedDate    DateTime?
+
+  clientServices  ClientService[]
+
+  @@index([createdBy])
+  @@index([modifiedBy])
+}
+
+model ClientService {
+  id              String        @id @default(uuid()) @db.Uuid
+  clientId        String        @db.Uuid
+  serviceId       String        @db.Uuid
+  status          ServiceStatus @default(Scheduled)
+  assignedDate    DateTime      @default(now())
+  startDate       DateTime?     
+  endDate         DateTime?     
+  notes           String?       @db.VarChar(1000)
+  createdBy       String        @db.VarChar(100)
+  createdDate     DateTime      @default(now())
+  modifiedBy      String?       @db.VarChar(100)
+  modifiedDate    DateTime?
+
+  client          ClientDetail  @relation(fields: [clientId], references: [id])
+  service         Services      @relation(fields: [serviceId], references: [id])
+
+  @@unique([clientId, serviceId])
+  @@index([clientId])
+  @@index([serviceId])
+  @@index([status])
+  @@index([createdBy])
+  @@index([modifiedBy])
+}

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Invitation</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background:#f6f7fb; margin:0; padding:40px; }
+      .card { max-width:520px; margin:40px auto; background:#fff; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,.06); overflow:hidden; }
+      .header { padding:24px; background:linear-gradient(135deg,#0ea5e9,#2563eb); color:#fff; }
+      .title { margin:0; font-size:20px; }
+      .content { padding:24px; color:#1f2937; }
+      .btns { display:flex; gap:12px; margin-top:16px; }
+      button { appearance:none; border:none; padding:12px 16px; border-radius:10px; cursor:pointer; font-weight:600; }
+      .accept { background:#16a34a; color:#fff; }
+      .reject { background:#ef4444; color:#fff; }
+      .muted { color:#6b7280; font-size:14px; }
+      .status { margin-top:14px; font-size:14px; }
+      .hidden { display:none; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="header">
+        <h1 class="title">You're invited to Pro Service Control</h1>
+      </div>
+      <div class="content">
+        <p id="intro">Please confirm whether you want to accept this invitation.</p>
+        <div class="btns">
+          <button id="acceptBtn" class="accept">Accept Invitation</button>
+          <button id="rejectBtn" class="reject">Reject Invitation</button>
+        </div>
+        <div id="status" class="status muted hidden"></div>
+        <p class="muted" id="footnote">If you didn't expect this, you can safely ignore or reject it.</p>
+      </div>
+    </div>
+
+    <script>
+      (function(){
+        function qs(name){
+          const params = new URLSearchParams(window.location.search);
+          return params.get(name);
+        }
+        const token = qs('token');
+        const action = (qs('action') || '').toLowerCase();
+        const acceptBtn = document.getElementById('acceptBtn');
+        const rejectBtn = document.getElementById('rejectBtn');
+        const statusEl = document.getElementById('status');
+        const introEl = document.getElementById('intro');
+
+        function setStatus(msg, ok){
+          statusEl.textContent = msg;
+          statusEl.classList.remove('hidden');
+          statusEl.style.color = ok ? '#16a34a' : '#ef4444';
+        }
+
+        if(!token){
+          acceptBtn.disabled = true;
+          rejectBtn.disabled = true;
+          setStatus('Missing token. Please use the link from your email.', false);
+          return;
+        }
+
+        async function act(kind){
+          acceptBtn.disabled = true; rejectBtn.disabled = true;
+          setStatus('Processing...', true);
+          try{
+            const base = window.location.origin;
+            const endpoint = kind === 'accept' ? '/api/invitations/accept' : '/api/invitations/reject';
+            const res = await fetch(base + endpoint + '?token=' + encodeURIComponent(token), { method: 'POST' });
+            const data = await res.json().catch(()=>({}));
+            if(!res.ok){
+              throw new Error(data?.message || 'Request failed');
+            }
+            introEl.textContent = kind === 'accept' ? 'Invitation accepted.' : 'Invitation rejected.';
+            setStatus('Success: ' + (data?.message || (kind === 'accept' ? 'Accepted' : 'Rejected')), true);
+          }catch(e){
+            setStatus('Error: ' + (e && e.message ? e.message : 'Unknown error'), false);
+            acceptBtn.disabled = false; rejectBtn.disabled = false;
+          }
+        }
+
+        acceptBtn.addEventListener('click', function(){ act('accept'); });
+        rejectBtn.addEventListener('click', function(){ act('reject'); });
+
+        // Auto-act if action provided in URL
+        if (action === 'accept' || action === 'reject') {
+          setTimeout(() => act(action), 50);
+        }
+      })();
+    </script>
+  </body>
+  </html>
+
+
