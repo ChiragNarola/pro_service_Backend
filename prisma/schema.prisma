@@ -188,6 +188,17 @@ model CompanyPlanDetail {
   endDate      DateTime?
   isActive     Boolean  @default(true)
   notes        String?  @db.VarChar(255)
+  // Payment summary
+  amountCents  Int?
+  currency     String?  @db.VarChar(10)
+  paymentIntentId String? @db.VarChar(255)
+  chargeId     String?  @db.VarChar(255)
+  // Card snapshot
+  cardBrand    String?  @db.VarChar(50)
+  cardLast4    String?  @db.VarChar(10)
+  cardExpMonth Int?
+  cardExpYear  Int?
+  receiptUrl   String?  @db.VarChar(500)
   createdBy    String   @db.VarChar(100)
   createdDate  DateTime @default(now())
   modifiedBy   String?  @db.VarChar(100)

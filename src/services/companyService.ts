@@ -148,31 +148,6 @@ export const updateCompany = async (
   return updatedCompanyData ?? {};
 };
 
-// Get Company by ID Service
-export const getCompanyById = async (companyId: string) => {
-  const company = await prisma.companyDetail.findUnique({
-    where: { id: companyId },
-    include: {
-      subscription: true,
-      user: {
-        select: {
-          id: true,
-          name: true,
-          lastName: true,
-          email: true,
-          status: true,
-        }
-      }
-    },
-  });
-
-  if (!company) {
-    throw new Error('Company not found');
-  }
-
-  return company;
-};
-
 // Get All Companies Service
 export const getAllCompanies = async (page: number = 1, limit: number = 10, search?: string) => {
   const skip = (page - 1) * limit;

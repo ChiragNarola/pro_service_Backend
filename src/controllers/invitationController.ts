@@ -86,28 +86,7 @@ export const acceptInvitationController = async (req: Request, res: Response) =>
     } catch (e) {
       console.error('Failed to activate company on invitation accept:', (e as any)?.message || e);
     }
-    // Fire success email with credentials (best effort)
-    try {
-      const appUrl = process.env.APP_URL || 'http://localhost:8080';
-      const defaultPassword = '12345678';
-      await sendEmail({
-        to: updated.email,
-        subject: 'Invitation accepted - your login details',
-        html: `
-          <div style="font-family:Arial,Helvetica,sans-serif;line-height:1.5;color:#111">
-            <h2 style="margin:0 0 12px">You're all set!</h2>
-            <p>Your invitation has been accepted successfully. Use the credentials below to sign in:</p>
-            <p><strong>Email:</strong> ${updated.email}<br/>
-               <strong>Password:</strong> ${defaultPassword}<br/>
-               <strong>Link:</strong> <a href="${appUrl}" target="_blank" rel="noopener">${appUrl}</a></p>
-            <p style="color:#555">For security, please change your password after first login.</p>
-          </div>
-        `,
-        text: `Invitation accepted. Email: ${updated.email} | Password: ${defaultPassword} | Link: ${appUrl}`,
-      });
-    } catch (e) {
-      console.error('Failed to send acceptance email:', (e as any)?.message || e);
-    }
+    // Email flow removed as per requirement
 
     return successResponse(res, { message: 'Invitation accepted', user: updated }, 200);
   } catch (e: any) {
@@ -143,5 +122,3 @@ export const rejectInvitationController = async (req: Request, res: Response) =>
     return errorResponse(res, e?.message || 'Server error', 500);
   }
 };
-
-

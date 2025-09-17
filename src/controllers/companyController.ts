@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { getCompanyStatistics, updateCompany, getCompanyById, getAllCompanies, UpdateCompanyInput, getCompanyByCompanyId } from '../services/companyService';
+import { getCompanyStatistics, updateCompany, getAllCompanies, UpdateCompanyInput, getCompanyByCompanyId } from '../services/companyService';
 import { successResponse, successResponseMessage, errorResponse } from '../utils/responseHelper';
 
 // Company Statistics Controller
@@ -34,24 +34,6 @@ export const updateCompanyController = async (req: Request, res: Response) => {
   }
 };
 
-// Get Company by ID Controller
-export const getCompanyByIdController = async (req: Request, res: Response) => {
-  try {
-    const { companyId } = req.params;
-
-    if (!companyId) {
-      return errorResponse(res, 'Company ID is required', 400);
-    }
-
-    const company = await getCompanyById(companyId);
-    successResponse(res, company, 200);
-  } catch (error: any) {
-    if (error.message === 'Company not found') {
-      return errorResponse(res, error.message, 404);
-    }
-    errorResponse(res, 'Error retrieving company', 500);
-  }
-};
 
 // Get All Companies Controller
 export const getAllCompaniesController = async (req: Request, res: Response) => {

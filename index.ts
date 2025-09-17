@@ -10,8 +10,10 @@ import { verifyEmailTransport } from './src/utils/mailer';
 const authRoutes = require("./src/routes/auth");
 const invitationRoutes = require("./src/routes/invitationRoutes");
 const subscriptionRoutes = require("./src/routes/subscriptionRoutes");
+const paymentRoutes = require("./src/routes/paymentRoutes");
 const masterRoutes = require("./src/routes/masterRoutes");
 const employeeRoutes = require("./src/routes/employeeRoutes");
+const userRoutes = require("./src/routes/userRoutes");
 const clientRoutes = require("./src/routes/clientRoutes");
 const companyRoutes = require("./src/routes/companyRoutes");
 
@@ -37,6 +39,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 DBconnection();
 
 // Middleware
+// JSON parser must come after raw webhook path is registered, so we mount payment routes first
+app.use('/payments', paymentRoutes);
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
@@ -49,6 +53,7 @@ app.use("/auth", authRoutes);
 app.use("/api/invitations", invitationRoutes);
 app.use("/subscription", subscriptionRoutes);
 app.use("/employee", employeeRoutes);
+app.use("/user", userRoutes);
 app.use("/master", masterRoutes);
 app.use("/client", clientRoutes);
 app.use("/company", companyRoutes);

@@ -1,6 +1,6 @@
 import express, { Router } from 'express';
 import authenticate from '../logs/middlewares/authMiddleware';
-import { getCompanyStatisticsController, updateCompanyController, getCompanyByIdController, getAllCompaniesController, getCompanyByCompanyIdController } from '../controllers/companyController';
+import { getCompanyStatisticsController, updateCompanyController, getAllCompaniesController, getCompanyByCompanyIdController } from '../controllers/companyController';
 
 const router: Router = express.Router();
 
@@ -305,7 +305,7 @@ const router: Router = express.Router();
  *     tags: [Company Management]
  *     security:
  *       - bearerAuth: []
- *     description: Retrieve company details by company ID
+ *     description: Retrieve company details by company ID with related data (user, employees, clients, subscription)
  *     parameters:
  *       - in: path
  *         name: companyId
@@ -326,7 +326,22 @@ const router: Router = express.Router();
  *                   type: boolean
  *                   example: true
  *                 data:
- *                   $ref: '#/components/schemas/CompanyDetail'
+ *                   allOf:
+ *                     - $ref: '#/components/schemas/CompanyDetail'
+ *                     - type: object
+ *                       properties:
+ *                         user:
+ *                           type: object
+ *                           description: User details
+ *                         employeeDetail:
+ *                           type: array
+ *                           description: Employee details
+ *                         clientDetails:
+ *                           type: array
+ *                           description: Client details
+ *                         subscription:
+ *                           type: object
+ *                           description: Subscription details
  *       400:
  *         description: Bad request - Company ID is required
  *         content:
@@ -457,15 +472,12 @@ const router: Router = express.Router();
 router.get("/:companyId/statistics", authenticate, getCompanyStatisticsController);
 
 // Get Company by ID Route
-router.get("/:companyId", authenticate, getCompanyByIdController);
+router.get("/:companyId", authenticate, getCompanyByCompanyIdController);
 
 // Update Company Route
 router.put("/:companyId", authenticate, updateCompanyController);
 
 // Get All Companies Route
 router.post("/", authenticate, getAllCompaniesController);
-
-// Get Company by Company ID Route
-router.get("/:companyId", authenticate, getCompanyByCompanyIdController);
 
 module.exports = router;
