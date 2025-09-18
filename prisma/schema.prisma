@@ -30,7 +30,7 @@ model User {
   email                  String           @unique @db.VarChar(255)
   password               String?          @db.VarChar(255)
   mobileNumber           String?          @db.VarChar(20)
-  profilePhotoURL        String?          @db.VarChar(255)
+  profilePhotoURL        String?          @db.VarChar(1000)
   invitationToken        String?          @db.VarChar(255)
   invitationExpiresAt    DateTime?
   passwordResetToken     String?          @db.VarChar(255)
@@ -46,6 +46,7 @@ model User {
   employeeDetail        EmployeeDetail[]
   clientDetails         ClientDetail[]
   companyPlanDetails    CompanyPlanDetail[]
+  systemSettings        SystemSettings[]
 
   @@index([email])
   @@index([roleId])
@@ -88,6 +89,13 @@ enum ServiceStatus {
   Cancelled   @map("Cancelled")
   OnHold      @map("OnHold")
   Pending     @map("Pending")
+}
+
+// Payment providers available for settings/preferences
+enum PaymentGateway {
+  Stripe @map("Stripe")
+  PayPal @map("PayPal")
+  Square @map("Square")
 }
 
 model Module {
@@ -323,6 +331,26 @@ model ClientService {
   @@index([clientId])
   @@index([serviceId])
   @@index([status])
+  @@index([createdBy])
+  @@index([modifiedBy])
+}
+
+// Stores per-user system configuration like notifications and payment gateway
+model SystemSettings {
+  id                 String          @id @default(uuid()) @db.Uuid
+  userId             String?         @db.Uuid
+  emailNotifications Boolean         @default(true)
+  smsNotifications   Boolean         @default(false)
+  paymentGateway     PaymentGateway  @default(Stripe)
+
+  createdBy          String          @db.VarChar(100)
+  createdDate        DateTime        @default(now())
+  modifiedBy         String?         @db.VarChar(100)
+  modifiedDate       DateTime?
+
+  user               User?           @relation(fields: [userId], references: [id])
+
+  @@index([userId])
   @@index([createdBy])
   @@index([modifiedBy])
 }

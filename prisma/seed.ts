@@ -1,6 +1,6 @@
 console.log("Running seed.ts...");
 
-import { PrismaClient, RoleName, PlanName } from '@prisma/client';
+import { PrismaClient, RoleName, PlanName, PaymentGateway } from '@prisma/client';
 import { hashPassword } from '../src/utils/commonHelper';
 
 const prisma = new PrismaClient();
@@ -310,6 +310,16 @@ async function main() {
             { serviceName: 'E-commerce Solutions', createdBy: 'system' },
             { serviceName: 'Analytics Implementation', createdBy: 'system' },
             { serviceName: 'Backup & Recovery', createdBy: 'system' },
+        ],
+        skipDuplicates: true,
+    });
+    const superAdminUser = await prisma.user.findFirst({
+        where: { roleId: superAdminRole?.id },
+    });
+    console.log("🚀 ~ main ~ superAdminUser:", superAdminUser)
+    await prisma.systemSettings.createMany({
+        data: [
+            { userId: superAdminUser?.id, emailNotifications: false, smsNotifications: false, paymentGateway: PaymentGateway.Stripe, createdBy: 'system' }
         ],
         skipDuplicates: true,
     });

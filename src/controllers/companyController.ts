@@ -34,7 +34,6 @@ export const updateCompanyController = async (req: Request, res: Response) => {
   }
 };
 
-
 // Get All Companies Controller
 export const getAllCompaniesController = async (req: Request, res: Response) => {
   try {

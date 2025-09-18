@@ -262,6 +262,7 @@ export const updateUser = async (userData: Partial<User>): Promise<User> => {
       lastName: userData.lastName!,
       email: userData.email!,
       mobileNumber: userData.mobileNumber,
+      profilePhotoURL: userData.profilePhotoURL,
       createdBy: userData.createdBy!,
       createdDate: userData.createdDate!,
       modifiedBy: userData.modifiedBy,

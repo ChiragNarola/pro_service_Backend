@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { successResponse, errorResponse } from '../utils/responseHelper';
+import { updateUser } from '../repositories/userRepo';
 
 const prisma = new PrismaClient();
 
@@ -18,6 +19,7 @@ export const getUserByIdController = async (req: Request, res: Response) => {
         email: true,
         mobileNumber: true,
         status: true,
+        profilePhotoURL: true,
         createdDate: true,
         role: { select: { id: true, name: true } },
       },
@@ -30,4 +32,29 @@ export const getUserByIdController = async (req: Request, res: Response) => {
   }
 };
 
-
+export const updateUserByIdController = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userData = await prisma.user.findUnique({
+      where: { id },
+    });
+    if (!userData) return errorResponse(res, 'User not found', 404);
+    const user = await updateUser({ 
+      id: userData.id,
+      name: req.body.name,
+      lastName: req.body.lastName,
+      email: req.body.email,
+      mobileNumber: req.body.mobileNumber,
+      profilePhotoURL: req.body.profilePhotoURL,
+      roleId: userData.roleId,
+      status: userData.status,
+      createdDate: userData.createdDate,
+      modifiedDate: new Date(),
+      modifiedBy: req.user.id,
+      createdBy: userData.createdBy,
+     });
+    return successResponse(res, user, 200);
+  } catch (e: any) {
+    return errorResponse(res, e?.message || 'Failed to update user', 500);
+  }
+};

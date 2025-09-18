@@ -16,6 +16,8 @@ const employeeRoutes = require("./src/routes/employeeRoutes");
 const userRoutes = require("./src/routes/userRoutes");
 const clientRoutes = require("./src/routes/clientRoutes");
 const companyRoutes = require("./src/routes/companyRoutes");
+const systemSettingsRoutes = require("./src/routes/systemSettingsRoutes");
+const uploadRoutes = require("./src/routes/uploadRoutes");
 
 const { DBconnection } = require("./src/config/DBconnection");
 // const errorHandler = require("./src/middlewares/errorHandler");
@@ -57,6 +59,8 @@ app.use("/user", userRoutes);
 app.use("/master", masterRoutes);
 app.use("/client", clientRoutes);
 app.use("/company", companyRoutes);
+app.use("/settings", systemSettingsRoutes);
+app.use("/upload", uploadRoutes);
 // app.use("/permission", permissionRoutes);
 
 // Test Route

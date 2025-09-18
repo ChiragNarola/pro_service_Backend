@@ -478,6 +478,7 @@ router.get("/:companyId", authenticate, getCompanyByCompanyIdController);
 router.put("/:companyId", authenticate, updateCompanyController);
 
 // Get All Companies Route
-router.post("/", authenticate, getAllCompaniesController);
+router.get("/", authenticate, getAllCompaniesController);
+
 
 module.exports = router;
