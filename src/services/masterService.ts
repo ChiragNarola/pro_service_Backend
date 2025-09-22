@@ -2,9 +2,6 @@ import { PrismaClient, Role, RoleName, EmployeeRole, Department, Module } from '
 
 const prisma = new PrismaClient();
 
-/**
- * Get all active Roles ordered by name.
- */
 export const getAllRoles = async (): Promise<Role[]> => {
     const roleData = await prisma.role.findMany({
         where: { isActive: true },
@@ -15,7 +12,6 @@ export const getAllRoles = async (): Promise<Role[]> => {
 };
 
 export const createRole = async (data: { name: RoleName }): Promise<Role> => {
-  // Optional: check if role already exists
   const existingRole = await prisma.role.findUnique({
     where: { name: data.name }
   });
@@ -27,7 +23,7 @@ export const createRole = async (data: { name: RoleName }): Promise<Role> => {
   const newRole = await prisma.role.create({
     data: {
       name: data.name,
-      isActive: true, // default value, if you track active status
+      isActive: true, 
       createdBy: "System"
     }
   });
@@ -44,7 +40,6 @@ export const getAllEmployeeRoles = async (): Promise<EmployeeRole[]> => {
 };
 
 export const createEmployeeRole = async (data: { name: string }): Promise<EmployeeRole> => {
-  // Optional: check if role already exists
   const existingRole = await prisma.employeeRole.findUnique({
     where: { name: data.name }
   });
@@ -71,7 +66,6 @@ export const getAllEmployeeDepartment = async (): Promise<Department[]> => {
 };
 
 export const createEmployeeDepartment = async (data: { name: string }): Promise<Department> => {
-  // Optional: check if role already exists
   const existingDepartment = await prisma.department.findUnique({
     where: { name: data.name }
   });

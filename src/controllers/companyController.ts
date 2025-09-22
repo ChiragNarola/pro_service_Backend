@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { getCompanyStatistics, updateCompany, getAllCompanies, UpdateCompanyInput, getCompanyByCompanyId, changeCompanyStatus } from '../services/companyService';
 import { successResponse, successResponseMessage, errorResponse } from '../utils/responseHelper';
 
-// Company Statistics Controller
 export const getCompanyStatisticsController = async (req: Request, res: Response) => {
   try {
     const { companyId } = req.params;
@@ -18,7 +17,6 @@ export const getCompanyStatisticsController = async (req: Request, res: Response
   }
 };
 
-// Update Company Controller
 export const updateCompanyController = async (req: Request, res: Response) => {
   try {
     const { companyId } = req.params;
@@ -34,14 +32,12 @@ export const updateCompanyController = async (req: Request, res: Response) => {
   }
 };
 
-// Get All Companies Controller
 export const getAllCompaniesController = async (req: Request, res: Response) => {
   try {
     const page = parseInt(req.body.page as string) || 1;
     const limit = parseInt(req.body.limit as string) || 10;
     const search = req.body.search as string;
 
-    // Validate pagination parameters
     if (page < 1) {
       return errorResponse(res, 'Page number must be greater than 0', 400);
     }
@@ -56,7 +52,6 @@ export const getAllCompaniesController = async (req: Request, res: Response) => 
   }
 };
 
-// Get Company by Company ID Controller
 export const getCompanyByCompanyIdController = async (req: Request, res: Response) => {
   try {
     const { companyId } = req.params;
@@ -70,7 +65,6 @@ export const getCompanyByCompanyIdController = async (req: Request, res: Respons
   }
 };
 
-// Change Company Status Controller
 export const changeCompanyStatusController = async (req: Request, res: Response) => {
   try {
     const { companyId } = req.params;

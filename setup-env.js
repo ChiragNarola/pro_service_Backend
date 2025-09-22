@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 
-// Check if .env file already exists
 const envPath = path.join(__dirname, '.env');
 const envProductionPath = path.join(__dirname, '.env.production');
 

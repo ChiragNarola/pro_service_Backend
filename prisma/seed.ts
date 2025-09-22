@@ -1,6 +1,6 @@
 console.log("Running seed.ts...");
 
-import { PrismaClient, RoleName, PlanName, PaymentGateway } from '@prisma/client';
+import { PrismaClient, RoleName, PaymentGateway } from '@prisma/client';
 import { hashPassword } from '../src/utils/commonHelper';
 
 const prisma = new PrismaClient();
@@ -100,20 +100,20 @@ async function main() {
     await prisma.subscription.createMany({
         data: [
             {
-                planName: PlanName.Starter,
+                planName: "Starter",
                 duration: 'Annual',
                 rate: 49,
                 createdBy: 'system'
             },
             {
-                planName: PlanName.Professional,
+                planName: "Professional",
                 duration: 'Annual',
                 rate: 99,
                 isPopular: true,
                 createdBy: 'system'
             },
             {
-                planName: PlanName.Enterprise,
+                planName: "Enterprise",
                 duration: 'Annual',
                 rate: 199,
                 createdBy: 'system'
@@ -123,13 +123,13 @@ async function main() {
     });
 
     const StarterPlan = await prisma.subscription.findFirst({
-        where: { planName: PlanName.Starter },
+        where: { planName: "Starter" },
     });
     const ProfessionalPlan = await prisma.subscription.findFirst({
-        where: { planName: PlanName.Professional },
+        where: { planName: "Professional" },
     });
     const EnterprisePlan = await prisma.subscription.findFirst({
-        where: { planName: PlanName.Enterprise },
+        where: { planName: "Enterprise" },
     });
     const basicJobManagement = await prisma.module.findFirst({
         where: { name: "Basic job management" },
@@ -287,7 +287,6 @@ async function main() {
         skipDuplicates: true,
     });
 
-    // Seed Services
     await prisma.services.createMany({
         data: [
             { serviceName: 'Web Development', createdBy: 'system' },

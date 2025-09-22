@@ -1,13 +1,9 @@
 
 import express, { Router } from 'express';
-// import authenticate from '../middlewares/authMiddleware';
 
 const router: Router = express.Router();
 
 const { fetchRole, createRole, fetchEmployeeRole, createEmployeeRole, fetchEmployeeDepartment, createEmployeeDepartment, fetchModules } = require('../controllers/masterController');
-// const { loginSchema } = require("../dtos/auth.dto");
-
-// import validate from '../middlewares/validateRequest';
 
 /**
  * @swagger

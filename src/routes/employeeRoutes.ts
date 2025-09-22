@@ -1,5 +1,4 @@
 import express, { Router } from 'express';
-// import authenticate from '../middlewares/authMiddleware';
 
 const router: Router = express.Router();
 import authenticate from '../logs/middlewares/authMiddleware';
@@ -8,9 +7,6 @@ import { employeeSchema, fetchCompanySchema, updateEmployeeSchema } from '../dto
 import { updateEmployeeStatusById } from '../controllers/employeeController';
 
 const { fetchEmployee, createEmployee, fetchCompany, updateEmployeeById } = require('../controllers/employeeController');
-// const { loginSchema } = require("../dtos/auth.dto");
-
-// import validate from '../middlewares/validateRequest';
 
 /**
  * @swagger
@@ -143,6 +139,5 @@ router.patch("/updateEmployeeStatusById", authenticate, updateEmployeeStatusById
  *                     type: string
  */
 router.put("/updateEmployeeById", authenticate, validate(updateEmployeeSchema), updateEmployeeById);
-
 
 module.exports = router;

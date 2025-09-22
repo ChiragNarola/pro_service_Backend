@@ -5,7 +5,6 @@ import uploadProfileImageController from '../controllers/uploadController';
 
 const router: Router = express.Router();
 
-// POST /upload/profile-image - upload profile image
 router.post('/profile-image', authenticate, uploadProfileImage, uploadProfileImageController);
 
 module.exports = router;

@@ -2,7 +2,6 @@ import { PrismaClient, User } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-// Define type for the createUser data input
 interface CreateUserInput {
   name: string;
   email: string;
@@ -11,7 +10,6 @@ interface CreateUserInput {
   roleId: string;
 }
 
-// Database connection function
 export async function DBconnection(): Promise<void> {
   try {
     await prisma.$connect();

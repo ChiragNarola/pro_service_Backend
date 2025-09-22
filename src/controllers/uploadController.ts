@@ -6,7 +6,6 @@ import path from 'path';
 
 const prisma = new PrismaClient();
 
-// Extend Request type to include file property
 interface UploadRequest extends Request {
   file?: any;
   user?: any;
@@ -35,10 +34,8 @@ export const uploadProfileImageController = async (req: UploadRequest, res: Resp
       return errorResponse(res, 'User not authenticated', 401);
     }
 
-    // Generate the file URL
     const fileUrl = `/uploads/profile-images/${req.file.filename}`;
 
-    // Get current user data first
     const currentUser = await prisma.user.findUnique({
       where: { id: userId },
     });
@@ -47,7 +44,6 @@ export const uploadProfileImageController = async (req: UploadRequest, res: Resp
       return errorResponse(res, 'User not found', 404);
     }
 
-    // Update user's profile photo URL in database
     const updatedUser = await updateUser({
       id: userId,
       name: currentUser.name,

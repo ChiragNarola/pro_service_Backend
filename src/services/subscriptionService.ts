@@ -1,4 +1,4 @@
-import { PrismaClient, Subscription, SubscriptionType, PlanName, Module } from '@prisma/client';
+import { PrismaClient, Subscription, SubscriptionType, Module } from '@prisma/client';
 import { Response } from 'express';
 import { errorResponse } from '../utils/responseHelper';
 
@@ -30,11 +30,13 @@ export const getAllSubscription = async (): Promise<Subscription[]> => {
 };
 
 export type CreateSubscriptionInput = {
-  planName: PlanName;
+  planName: string;
   duration: SubscriptionType;
   rate: number;
   isPopular?: boolean;
   createdBy: string;
+  features: Array<{ id: string; name: string }>;
+  employeeCount: string;
 };
 
 export type UpdateSubscriptionInput = Partial<CreateSubscriptionInput> & { modifiedBy: string };
@@ -46,9 +48,22 @@ export const createSubscription = async (input: CreateSubscriptionInput) => {
       duration: input.duration,
       rate: input.rate,
       isPopular: input.isPopular ?? false,
-      createdBy: input.createdBy,
+      createdBy: input.createdBy
     },
   });
+
+  const modulePlanMappings = input.features.map((feature) => ({
+    moduleId: feature.id,
+    isActive: true,
+    subscriptionId: created.id,
+    maxEmployees: feature.name === "Employee" ? input.employeeCount : null,
+    createdBy: input.createdBy
+  }));
+
+  await prisma.modulePlanMapping.createMany({
+    data: modulePlanMappings,
+  });
+
   return created;
 };
 
@@ -64,18 +79,64 @@ export const updateSubscription = async (id: string, input: UpdateSubscriptionIn
       modifiedDate: new Date(),
     },
   });
+
+  const modulePlanMappings = input.features.map((feature) => ({
+    moduleId: feature.id,
+    isActive: true,
+    subscriptionId: updated.id,
+    maxEmployees: feature.name === "Employee" ? input.employeeCount : null,
+    createdBy: input.modifiedBy
+  }));
+
+  const NewModulePlanMappings = await prisma.modulePlanMapping.findMany({
+    where: { subscriptionId: updated.id },
+  });
+
+  const modulePlanMappingsToDelete = NewModulePlanMappings.filter((mapping) => !modulePlanMappings.some((m) => m.moduleId === mapping.moduleId));
+
+  await prisma.modulePlanMapping.deleteMany({
+    where: { id: { in: modulePlanMappingsToDelete.map((m) => m.id) } },
+  });
+
+  const modulePlanMappingsToCreate = modulePlanMappings.filter((mapping) => !NewModulePlanMappings.some((m) => m.moduleId === mapping.moduleId));
+
+  await prisma.modulePlanMapping.createMany({
+    data: modulePlanMappingsToCreate,
+  });
+
   return updated;
 };
 
-export const deleteSubscription = async (id: string) => {
-  const deleted = await prisma.subscription.delete({ where: { id } });
+export const deleteSubscription = async (id: string, deletedBy: string) => {
+
+  const deleted = await prisma.subscription.update({  
+    where: { id },
+    data: {
+      isActive: false,
+      isDeleted: true,
+      deletedBy: deletedBy,
+      deletedDate: new Date()
+    }
+  });
+
+  const modulePlanMappingsToDelete = await prisma.modulePlanMapping.findMany({
+    where: { subscriptionId: id },
+  });
+
+  await prisma.modulePlanMapping.updateMany({
+    where: { id: { in: modulePlanMappingsToDelete.map((m) => m.id) } },
+    data: {
+      isActive: false,
+      isDeleted: true,
+      deletedBy: deletedBy,
+      deletedDate: new Date()
+    }
+  });
   return deleted;
 };
 
-// Modules
 export const getAllModules = async (): Promise<Module[]> => {
   const modules = await prisma.module.findMany({
-    // where: { isActive: true },
     orderBy: { createdDate: 'desc' }
   });
   return modules;
@@ -144,10 +205,13 @@ export const getSubscriptionById = async (id: string) => {
 };
 
 export const deleteModule = async (id: string, createdBy: string) => {
-  const deleted = await prisma.module.update({ where: { id }, data: { 
-    isActive: false,
-    isDeleted: true, 
-    deletedBy: createdBy, 
-    deletedDate: new Date() } });
+  const deleted = await prisma.module.update({
+    where: { id }, data: {
+      isActive: false,
+      isDeleted: true,
+      deletedBy: createdBy,
+      deletedDate: new Date()
+    }
+  });
   return deleted;
 };

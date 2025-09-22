@@ -57,16 +57,13 @@ interface EmployeeUpdate {
     status: UserStatus;
 }
 
-/**
- * Get all active countries ordered by name.
- */
 export const getEmployees = async (data: { companyId: string }): Promise<EmployeeDetail[]> => {
     const EmployeeData = await prisma.employeeDetail.findMany({
         where: { companyId: data.companyId },
         include: {
             user: {
                 include: {
-                    role: true, // <-- Include the role data inside user
+                    role: true,
                 }
             },
             employeeRole: true,
@@ -104,9 +101,6 @@ export const getCompany = async (data: { companyId: string }): Promise<CompanyDe
 
 export const createEmployee = async (input: EmployeeDetails): Promise<{ employeeDetail: EmployeeDetail; user: Omit<User, 'password'> }> => {
     const userId = uuidv4();
-
-    // const getRoleIdDetails = await getRoleId("Employee")
-    // Step 1: Create the user WITHOUT linking to company
     const user = await createUser({
         id: userId,
         name: input.name,
@@ -119,7 +113,6 @@ export const createEmployee = async (input: EmployeeDetails): Promise<{ employee
         status: 'Active',
     });
 
-    // Step 2: Create company and link user
     const employeeDetail = await createEmployeeData({
         id: uuidv4(),
         userId: userId,
@@ -138,7 +131,6 @@ export const createEmployee = async (input: EmployeeDetails): Promise<{ employee
         managerId: input.managerId,
         eid: input.eid
     });
-    // Remove password before returning
     const { password, ...userWithoutPassword } = user;
 
     return {
@@ -148,18 +140,15 @@ export const createEmployee = async (input: EmployeeDetails): Promise<{ employee
 };
 
 export const updateEmployeeStatus = async (input: EmployeeStatusUpdate): Promise<object> => {
-    // Update User
     await updateUserStatus({
         id: input.userId,
         status: input.employeeStatus,
     });
-    // Update Employee
     await updateEmployeeStatusData({
         id: input.id,
         userId: input.userId,
         status: input.employeeStatus,
     });
-    // Get Employee
     const EmployeeData = await prisma.employeeDetail.findFirst({
         where: { id: input.id },
         include: {
@@ -173,7 +162,6 @@ export const updateEmployeeStatus = async (input: EmployeeStatusUpdate): Promise
 };
 
 export const updateEmployee = async (input: EmployeeUpdate): Promise<object> => {
-    // Update User
     await updateUser({
         name: input.name,
         lastName: input.lastName,
@@ -187,7 +175,6 @@ export const updateEmployee = async (input: EmployeeUpdate): Promise<object> => 
         modifiedDate: new Date(),
         modifiedBy: `${input.name} ${input.lastName}`
     });
-    // Update Employee
     await updateEmployeeData({
         id: input.id,
         userId: input.userId,
@@ -206,7 +193,6 @@ export const updateEmployee = async (input: EmployeeUpdate): Promise<object> => 
         managerId: input.managerId,
         eid: input.eid
     });
-    // Get Employee
     const EmployeeData = await prisma.employeeDetail.findFirst({
         where: { id: input.id },
         include: {

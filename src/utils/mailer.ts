@@ -18,13 +18,11 @@ function getTransporter(): Transporter {
   const host = process.env.SMTP_HOST;
   const port = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : undefined;
   const user = process.env.SMTP_USER;
-  // Support both SMTP_PASSWORD and SMTP_PASS
   const pass = process.env.SMTP_PASSWORD || process.env.SMTP_PASS;
-  // If SMTP_SECURE not provided, infer from port (465 => true)
   const secure = process.env.SMTP_SECURE !== undefined
     ? String(process.env.SMTP_SECURE).toLowerCase() === 'true'
     : port === 465;
-  const service = process.env.SMTP_SERVICE; // optional e.g. 'gmail'
+  const service = process.env.SMTP_SERVICE;
 
   if ((!service && (!host || !port)) || !user || !pass) {
     throw new Error('SMTP configuration missing. Please set SMTP_HOST, SMTP_PORT (or SMTP_SERVICE), SMTP_USER, SMTP_PASSWORD/SMTP_PASS.');

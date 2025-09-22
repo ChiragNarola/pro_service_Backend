@@ -1,7 +1,6 @@
 import winston from "winston";
 import path from "path";
 
-// Define log format
 const logFormat = winston.format.combine(
   winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
   winston.format.printf(({ timestamp, level, message }) => {

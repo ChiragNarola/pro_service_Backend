@@ -83,7 +83,6 @@
         acceptBtn.addEventListener('click', function(){ act('accept'); });
         rejectBtn.addEventListener('click', function(){ act('reject'); });
 
-        // Auto-act if action provided in URL
         if (action === 'accept' || action === 'reject') {
           setTimeout(() => act(action), 50);
         }
@@ -91,5 +90,3 @@
     </script>
   </body>
   </html>
-
-

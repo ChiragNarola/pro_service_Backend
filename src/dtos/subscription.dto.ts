@@ -1,25 +1,29 @@
 import Joi from 'joi';
 
-// Enums mirrored from Prisma schema
-const planNameEnum = Joi.string().valid('Starter', 'Professional', 'Enterprise');
-const durationEnum = Joi.string().valid('Monthly', 'Annual');
+const durationEnum = Joi.string().valid('Monthly', 'Annual', 'Quarterly', 'HalfYearly');
 
 export const createSubscriptionSchema = Joi.object({
-  planName: planNameEnum.required(),
+  planName: Joi.string().required(),
   duration: durationEnum.required(),
-  planPrice: Joi.number().positive().precision(2).required(),
+  rate: Joi.number().positive().precision(2).required(),
   isPopular: Joi.boolean().optional(),
   isActive: Joi.boolean().optional(),
   employeeCount: Joi.string().optional(),
-  features: Joi.array().items(Joi.string()).optional(),
+  features: Joi.array().items(Joi.object({
+    id: Joi.string().required(),
+    name: Joi.string().required()
+  })).optional(),
 });
 
 export const updateSubscriptionSchema = Joi.object({
-  planName: planNameEnum.optional(),
+  planName: Joi.string().optional(),
   duration: durationEnum.optional(),
-  planPrice: Joi.number().positive().precision(2).optional(),
+  rate: Joi.number().positive().precision(2).optional(),
   employeeCount: Joi.string().optional(),
-  features: Joi.array().items(Joi.string()).optional(),
+  features: Joi.array().items(Joi.object({
+    id: Joi.string().required(),
+    name: Joi.string().required()
+  })).optional(),
   isPopular: Joi.boolean().optional(),
 }).min(1);
 

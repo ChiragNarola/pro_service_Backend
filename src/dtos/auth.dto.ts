@@ -72,7 +72,6 @@ export const companySignupSchema = Joi.object({
     })
 });
 
-// Change Password Schema
 export const changePasswordSchema = Joi.object({
   currentPassword: Joi.string().required().messages({
     "string.empty": "Current password is required",
@@ -93,7 +92,6 @@ export const changePasswordSchema = Joi.object({
     }),
 });
 
-// Forgot Password Schema
 export const forgotPasswordSchema = Joi.object({
   email: Joi.string().email().required().messages({
     "string.empty": "Email is required",
@@ -101,7 +99,6 @@ export const forgotPasswordSchema = Joi.object({
   }),
 });
 
-// Reset Password Schema
 export const resetPasswordSchema = Joi.object({
   token: Joi.string().required().messages({
     "string.empty": "Reset token is required",

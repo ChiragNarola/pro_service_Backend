@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-// import { getAllSubscription } from "../services/subscriptionService";
 import * as subscriptionService from "../services/subscriptionService";
 import { successResponse, errorResponse } from "../utils/responseHelper";
 
@@ -14,6 +13,7 @@ export const fetchSubscription = async (_req: Request, res: Response): Promise<R
 
 export const createSubscription = async (req: Request, res: Response): Promise<Response> => {
   try {
+    req.body.createdBy = req.user.id;
     const subscription = await subscriptionService.createSubscription(req.body);
     return successResponse(res, subscription, 201);
   } catch (err: any) {
@@ -41,7 +41,7 @@ export const fetchSubscriptionById = async (req: Request, res: Response): Promis
 
 export const deleteSubscription = async (req: Request, res: Response): Promise<Response> => {
   try {
-    const subscription = await subscriptionService.deleteSubscription(req.params.id);
+    const subscription = await subscriptionService.deleteSubscription(req.params.id, req.user.id);
     return successResponse(res, subscription, 200);
   } catch (err: any) {
     return errorResponse(res, "Server error", 500);

@@ -1,6 +1,4 @@
 import Joi from 'joi';
-
-// Company Update Interface (matches the service interface)
 export interface UpdateCompanyDto {
   companyName?: string;
   companyEmail?: string;
@@ -14,7 +12,6 @@ export interface UpdateCompanyDto {
   paymentMethod?: string;
 }
 
-// Company Response DTO
 export const companyResponseSchema = Joi.object({
   id: Joi.string().uuid().required(),
   userId: Joi.string().uuid().allow(null).required(),

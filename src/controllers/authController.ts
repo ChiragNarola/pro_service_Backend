@@ -38,7 +38,6 @@ export const companySignup = async (req: Request, res: Response): Promise<Respon
   try {
     const result = await signupUser(req.body);
 
-    // Create and store invitation token for the newly created user (7 days validity)
     const prisma = new PrismaClient();
     const signupInvitationToken = uuidv4();
     try {
@@ -56,7 +55,6 @@ export const companySignup = async (req: Request, res: Response): Promise<Respon
       console.error('Failed to store invitation token for signup user:', (e as any)?.message || e);
     }
 
-    // Fire confirmation email (best effort; do not block response on failure)
     const recipientEmails: string[] = [];
     if (req.body?.email) recipientEmails.push(req.body.email);
     if (req.body?.companyEmail && req.body.companyEmail !== req.body.email) {
@@ -95,7 +93,6 @@ export const companySignup = async (req: Request, res: Response): Promise<Respon
   }
 };
 
-// Change Password Controller
 export const changePasswordController = async (req: Request, res: Response) => {
   try {
     const { currentPassword, newPassword, confirmPassword } = req.body;
@@ -124,7 +121,6 @@ export const changePasswordController = async (req: Request, res: Response) => {
   }
 };
 
-// Forgot Password Controller
 export const forgotPasswordController = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { email } = req.body;
@@ -140,7 +136,6 @@ export const forgotPasswordController = async (req: Request, res: Response): Pro
   }
 };
 
-// Reset Password Controller
 export const resetPasswordController = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { token, password, confirmPassword } = req.body;

@@ -4,8 +4,6 @@ import { createClientData, createUser, getRoleId, updateUser, updateClientData a
 import { v4 as uuidv4 } from 'uuid';
 
 const prisma = new PrismaClient();
-
-// Initialize repositories
 const clientRepo = new GenericRepo<ClientDetail, typeof prisma.clientDetail>(
   prisma.clientDetail
 );
@@ -14,7 +12,6 @@ const servicesRepo = new GenericRepo<Services, typeof prisma.services>(
   prisma.services
 );
 
-// ClientDetail Services
 export interface CreateClientInput {
   name: string;
   clientCompanyName: string;
@@ -49,29 +46,25 @@ export interface UpdateClientInput {
 export const createClient = async (input: CreateClientInput): Promise<{ clientDetail: ClientDetail; user: Omit<User, 'password'> }> => {
   const userId = uuidv4();
 
-  // Get client role ID
   const clientRole = await getRoleId("Client");
   if (!clientRole) {
     throw new Error('Client role not found. Please ensure the Client role exists in the database.');
   }
 
-  // Step 1: Create the user 
   const user = await createUser({
     id: userId,
     name: input.name,
     lastName: input.lastName,
     email: input.email,
     mobileNumber: input.phone,
-    // For invitations, set temporary password and invitation token/expiry
     password: '12345678',
     createdBy: `${input.name} ${input.lastName}`,
     roleId: clientRole.id,
     status: input.status,
     invitationToken: uuidv4(),
-    invitationExpiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7), // 7 days
+    invitationExpiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
   });
 
-  // Step 2: Create client detail
   const clientDetail = await createClientData({
     id: uuidv4(),
     userId: userId,
@@ -88,7 +81,6 @@ export const createClient = async (input: CreateClientInput): Promise<{ clientDe
     clientStatus: input.status
   });
 
-  // Step 3: If services are provided, create service assignments
   if (input.services && input.services.length > 0) {
     const serviceAssignments = input.services.map(serviceId => ({
       id: uuidv4(),
@@ -105,7 +97,6 @@ export const createClient = async (input: CreateClientInput): Promise<{ clientDe
     });
   }
 
-  // Remove password before returning (like employee creation)
   const { password, ...userWithoutPassword } = user;
 
   return {
@@ -118,7 +109,6 @@ export const updateClient = async (
   id: string,
   input: UpdateClientInput
 ): Promise<object> => {
-  // First, get the client to find the userId
   const existingClient = await prisma.clientDetail.findFirst({
     where: { id },
     include: { user: true }
@@ -128,7 +118,6 @@ export const updateClient = async (
     throw new Error('Client not found');
   }
 
-  // Update User if user-related fields are provided
   if (input.name || input.lastName || input.email || input.phone) {
     await updateUser({
       id: existingClient.userId!,
@@ -141,7 +130,6 @@ export const updateClient = async (
     });
   }
 
-  // Step 3: Update client detail
   await updateClientDataRepo({
     id: existingClient.id,
     userId: existingClient.userId,
@@ -159,14 +147,11 @@ export const updateClient = async (
   });
 
 
-  // If services are provided, update service assignments
   if (input.services && input.services.length > 0) {
-    // Remove existing service assignments
     await prisma.clientService.deleteMany({
       where: { clientId: id },
     });
 
-    // Create new service assignments
     const serviceAssignments = input.services.map(serviceId => ({
       id: uuidv4(),
       clientId: id,
@@ -182,7 +167,6 @@ export const updateClient = async (
     });
   }
 
-  // Get updated Client with all related data
   const updatedClientData = await prisma.clientDetail.findFirst({
     where: { id },
     include: {
@@ -240,7 +224,6 @@ export const getAllClients = async (
 };
 
 
-// Services (Master Services) Services
 export interface CreateServiceInput {
   serviceName: string;
   createdBy: string;
@@ -283,7 +266,6 @@ export const deleteService = async (id: string): Promise<Services> => {
   return servicesRepo.delete({ id });
 };
 
-// ClientService (Assignment) Services
 export interface AssignServiceInput {
   clientId: string;
   serviceId: string;
@@ -337,7 +319,6 @@ export const getServiceClients = async (
   });
 };
 
-// Dashboard/Statistics Services
 export const getClientStatistics = async (companyId?: string) => {
   const whereClause = companyId ? { companyId } : {};
 

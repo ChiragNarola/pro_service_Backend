@@ -22,7 +22,6 @@ import {
 import { successResponseMessage, errorResponse, successResponse } from '../utils/responseHelper';
 import { sendEmail } from '../utils/mailer';
 
-// Get All Services Controller
 export const getServicesController = async (req: Request, res: Response) => {
   try {
     const services = await getAllServices();
@@ -32,7 +31,6 @@ export const getServicesController = async (req: Request, res: Response) => {
   }
 };
 
-// Client Management Controllers
 export const createClientController = async (req: Request, res: Response) => {
   try {
     const input: CreateClientInput = {
@@ -42,7 +40,6 @@ export const createClientController = async (req: Request, res: Response) => {
 
     const client = await createClient(input);
 
-    // Best-effort: send invitation email if newly created as Invited
     try {
       const user = (client as any)?.user;
       if (req.body?.status === 'Invited' && user?.invitationToken && user?.email) {
@@ -123,7 +120,6 @@ export const getAllClientsController = async (req: Request, res: Response) => {
   }
 };
 
-// Services Management Controllers
 export const createServiceController = async (req: Request, res: Response) => {
   try {
     const input: CreateServiceInput = {
@@ -211,7 +207,6 @@ export const getServiceClientsController = async (req: Request, res: Response) =
   }
 };
 
-// Dashboard/Statistics Controllers
 export const getClientStatisticsController = async (req: Request, res: Response) => {
   try {
     const { companyId } = req.query;

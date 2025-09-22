@@ -3,7 +3,6 @@ import { updateCompanyData } from '../repositories/userRepo';
 
 const prisma = new PrismaClient();
 
-// Company Update Interface
 export interface UpdateCompanyInput {
   companyName?: string;
   companyEmail?: string;
@@ -18,7 +17,6 @@ export interface UpdateCompanyInput {
   modifiedBy: string;
 }
 
-// Change company status only
 export const changeCompanyStatus = async (companyId: string, isActive: boolean, modifiedBy: string) => {
   const company = await prisma.companyDetail.findUnique({ where: { id: companyId } });
   if (!company) throw new Error('Company not found');
@@ -49,20 +47,16 @@ export const changeCompanyStatus = async (companyId: string, isActive: boolean, 
 
   return updated;
 };
-
-// Company Statistics Services
+  
 export const getCompanyStatistics = async (companyId: string) => {
-  // Get number of employees for the company
   const employeeCount = await prisma.employeeDetail.count({
     where: { companyId },
   });
 
-  // Get number of clients for the company
   const clientCount = await prisma.clientDetail.count({
     where: { companyId },
   });
 
-  // Get number of active employees
   const activeEmployeeCount = await prisma.employeeDetail.count({
     where: {
       companyId,
@@ -70,7 +64,6 @@ export const getCompanyStatistics = async (companyId: string) => {
     },
   });
 
-  // Get number of active clients
   const activeClientCount = await prisma.clientDetail.count({
     where: {
       companyId,
@@ -78,7 +71,6 @@ export const getCompanyStatistics = async (companyId: string) => {
     },
   });
 
-  // Get total service assignments for the company's clients
   const totalServiceAssignments = await prisma.clientService.count({
     where: {
       client: {
@@ -87,7 +79,6 @@ export const getCompanyStatistics = async (companyId: string) => {
     },
   });
 
-  // Get active service assignments
   const activeServiceAssignments = await prisma.clientService.count({
     where: {
       client: {
@@ -108,12 +99,10 @@ export const getCompanyStatistics = async (companyId: string) => {
   };
 };
 
-// Update Company Service
 export const updateCompany = async (
   id: string,
   input: UpdateCompanyInput
 ): Promise<object> => {
-  // First, get the company to find the userId
   const existingCompany = await prisma.companyDetail.findFirst({
     where: { id },
     include: { user: true }
@@ -123,7 +112,6 @@ export const updateCompany = async (
     throw new Error('Company not found');
   }
 
-  // If email is being updated, check if it's already taken by another company
   if (input.companyEmail && input.companyEmail !== existingCompany.companyEmail) {
     const emailExists = await prisma.companyDetail.findFirst({
       where: {
@@ -137,7 +125,6 @@ export const updateCompany = async (
     }
   }
 
-  // Update company detail
   await updateCompanyData({
     id: existingCompany.id,
     userId: existingCompany.userId,
@@ -160,7 +147,6 @@ export const updateCompany = async (
     modifiedDate: new Date(),
   });
 
-  // Get updated company with all related data
   const updatedCompanyData = await prisma.companyDetail.findFirst({
     where: { id },
     include: {
@@ -181,11 +167,9 @@ export const updateCompany = async (
   return updatedCompanyData ?? {};
 };
 
-// Get All Companies Service
 export const getAllCompanies = async (page: number = 1, limit: number = 10, search?: string) => {
   const skip = (page - 1) * limit;
 
-  // Build where clause for search
   const whereClause: any = {};
   if (search) {
     whereClause.OR = [
@@ -197,7 +181,6 @@ export const getAllCompanies = async (page: number = 1, limit: number = 10, sear
     ];
   }
 
-  // Get companies with pagination and search
   const companies = await prisma.companyDetail.findMany({
     where: whereClause,
     include: {
@@ -225,7 +208,6 @@ export const getAllCompanies = async (page: number = 1, limit: number = 10, sear
     },
   });
 
-  // Get total count for pagination
   const totalCount = await prisma.companyDetail.count({
     where: whereClause,
   });
@@ -243,7 +225,6 @@ export const getAllCompanies = async (page: number = 1, limit: number = 10, sear
   };
 };
 
-// Get Company by Company ID Service
 export const getCompanyByCompanyId = async (companyId: string) => {
   const company = await prisma.companyDetail.findUnique({
     where: { id: companyId },

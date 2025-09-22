@@ -32,7 +32,6 @@ export const acceptInvitationController = async (req: Request, res: Response) =>
       select: { id: true, email: true, status: true },
     });
 
-    // Also activate the company linked to this user (if any) - update one only
     try {
       const company = await prisma.companyDetail.findFirst({
         where: { userId: user.id },
@@ -44,7 +43,6 @@ export const acceptInvitationController = async (req: Request, res: Response) =>
           data: { isActive: true, modifiedDate: new Date() },
         });
 
-        // Payment/Plan flow: ensure a CompanyPlanDetail exists and is active
         try {
           const existingActivePlan = await prisma.companyPlanDetail.findFirst({
             where: { companyId: company.id, isActive: true },
@@ -86,7 +84,6 @@ export const acceptInvitationController = async (req: Request, res: Response) =>
     } catch (e) {
       console.error('Failed to activate company on invitation accept:', (e as any)?.message || e);
     }
-    // Email flow removed as per requirement
 
     return successResponse(res, { message: 'Invitation accepted', user: updated }, 200);
   } catch (e: any) {

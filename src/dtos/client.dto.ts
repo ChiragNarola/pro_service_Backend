@@ -1,6 +1,5 @@
 import Joi from "joi";
 
-// Client DTOs
 export const createClientSchema = Joi.object({
     name: Joi.string().max(100).required().messages({
         "string.empty": "Name is required",
@@ -108,7 +107,6 @@ export const updateClientSchema = Joi.object({
         })
 });
 
-// Service DTOs
 export const createServiceSchema = Joi.object({
     serviceName: Joi.string().max(100).required().messages({
         "string.empty": "Service name is required",

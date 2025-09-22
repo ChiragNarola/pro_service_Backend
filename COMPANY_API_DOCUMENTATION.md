@@ -123,7 +123,6 @@ Retrieves company details by company ID.
     "modifiedBy": null,
     "modifiedDate": null,
     "subscription": {
-      // Subscription details if available
     },
     "user": {
       "id": "uuid",
@@ -182,7 +181,6 @@ curl -X GET \
 ```javascript
 const axios = require('axios');
 
-// Update company
 const updateCompany = async (companyId, updateData, token) => {
   try {
     const response = await axios.put(
@@ -202,7 +200,6 @@ const updateCompany = async (companyId, updateData, token) => {
   }
 };
 
-// Get company
 const getCompany = async (companyId, token) => {
   try {
     const response = await axios.get(

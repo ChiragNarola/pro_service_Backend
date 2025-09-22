@@ -6,10 +6,8 @@ import { updateSettingsSchema } from '../dtos/systemSettings.dto';
 
 const router: Router = express.Router();
 
-// GET /settings/:userId - fetch system settings by user
 router.get('/', authenticate, getSettingsController);
 
-// PUT /settings/:userId - upsert system settings for user
 router.put('/:userId', authenticate, validate(updateSettingsSchema), updateSettingsController);
 
 module.exports = router;

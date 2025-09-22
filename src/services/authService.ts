@@ -17,7 +17,6 @@ export const loginUser = async (
     throw new Error('Invalid email or password');
   }
 
-  // Enforce only Active users can log in
   if ((user as any)?.status && (user as any).status !== 'Active') {
     throw new Error('Your account is not active. Please contact support.');
   }
@@ -25,15 +24,6 @@ export const loginUser = async (
   const token = generateToken(user);
   return { user, token };
 };
-
-// Optional logout if needed in future
-// export const logoutUser = (res: Response): void => {
-//   res.clearCookie('token', {
-//     httpOnly: true,
-//     secure: process.env.NODE_ENV === 'production',
-//     sameSite: 'Strict',
-//   });
-// };
 
 interface SignupInput {
   companyName: string;
@@ -49,14 +39,13 @@ interface SignupInput {
   email: string;
   mobileNumber: string;
   planId: string;
-  password: string; // Include if you want password on signup
+  password: string;
 }
 
 export const signupUser = async (input: SignupInput): Promise<{ company: CompanyDetail, user: Omit<User, 'password'> }> => {
   const userId = uuidv4();
 
   const getRoleIdDetails = await getRoleId("Company")
-  // Step 1: Create the user WITHOUT linking to company
   const user = await createUser({
     id: userId,
     name: input.name,
@@ -69,7 +58,6 @@ export const signupUser = async (input: SignupInput): Promise<{ company: Company
     status: 'Invited',
   });
 
-  // Step 2: Create company and link user
   const company = await createCompany({
     id: uuidv4(),
     userId: userId,
@@ -84,7 +72,6 @@ export const signupUser = async (input: SignupInput): Promise<{ company: Company
     isActive: false,
     createdBy: `${input.name} ${input.lastName}`,
   });
-  // Remove password before returning
   const { password, ...userWithoutPassword } = user;
 
   return {
@@ -93,10 +80,8 @@ export const signupUser = async (input: SignupInput): Promise<{ company: Company
   };
 };
 
-// Change Password Service
 export const changePassword = async (userId: string, oldPassword: string, newPassword: string): Promise<{ success: boolean; message: string }> => {
   try {
-    // Get user with password
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: { id: true, email: true, password: true },
@@ -106,16 +91,13 @@ export const changePassword = async (userId: string, oldPassword: string, newPas
       throw new Error('User not found');
     }
 
-    // Verify old password
     const isOldPasswordValid = await bcrypt.compare(oldPassword, user.password);
     if (!isOldPasswordValid) {
       throw new Error('Current password is incorrect');
     }
 
-    // Hash new password
     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
 
-    // Update password
     await prisma.user.update({
       where: { id: userId },
       data: { password: hashedNewPassword, modifiedDate: new Date() },
@@ -127,25 +109,20 @@ export const changePassword = async (userId: string, oldPassword: string, newPas
   }
 };
 
-// Forgot Password Service
 export const forgotPassword = async (email: string): Promise<{ success: boolean; message: string }> => {
   try {
-    // Check if user exists
     const user = await prisma.user.findUnique({
       where: { email: email.toLowerCase() },
       select: { id: true, email: true, name: true },
     });
 
     if (!user) {
-      // For security, don't reveal if email exists or not
       return { success: true, message: 'If the email exists, a password reset link has been sent.' };
     }
 
-    // Generate reset token
     const resetToken = uuidv4();
-    const resetExpires = new Date(Date.now() + 1000 * 60 * 60); // 1 hour
+    const resetExpires = new Date(Date.now() + 1000 * 60 * 60);
 
-    // Update user with reset token
     await prisma.user.update({
       where: { id: user.id },
       data: {
@@ -155,7 +132,6 @@ export const forgotPassword = async (email: string): Promise<{ success: boolean;
       },
     });
 
-    // Send reset email
     const appName = process.env.APP_NAME || 'Pro Service';
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:8080/';
     const resetUrl = `${frontendUrl}/reset-password?token=${encodeURIComponent(resetToken)}`;
@@ -184,15 +160,13 @@ export const forgotPassword = async (email: string): Promise<{ success: boolean;
   }
 };
 
-// Reset Password Service
 export const resetPassword = async (token: string, newPassword: string): Promise<{ success: boolean; message: string }> => {
   try {
-    // Find user by reset token
     const user = await prisma.user.findFirst({
       where: {
         passwordResetToken: token,
         passwordResetExpiresAt: {
-          gt: new Date(), // Token must not be expired
+          gt: new Date(),
         },
       },
     });
@@ -201,10 +175,8 @@ export const resetPassword = async (token: string, newPassword: string): Promise
       throw new Error('Invalid or expired reset token');
     }
 
-    // Hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    // Update user password and clear reset token
     await prisma.user.update({
       where: { id: user.id },
       data: {

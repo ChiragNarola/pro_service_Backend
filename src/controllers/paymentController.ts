@@ -8,7 +8,6 @@ import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
-// Build a short code from company name (letters only, up to 4 chars)
 const buildCompanyShort = (name: string | null | undefined): string => {
   const cleaned = String(name || '')
     .replace(/[^a-zA-Z\s]/g, ' ')
@@ -20,7 +19,6 @@ const buildCompanyShort = (name: string | null | undefined): string => {
   return candidate.slice(0, 4);
 };
 
-// Generate invoice number: INV-<SHORT>-<YYYY>-<NNN>
 const generateInvoiceNumber = async (companyId: string): Promise<string> => {
   const company = await prisma.companyDetail.findUnique({ where: { id: companyId }, select: { companyName: true } });
   const short = buildCompanyShort(company?.companyName);
@@ -38,10 +36,8 @@ const generateInvoiceNumber = async (companyId: string): Promise<string> => {
 };
 
 const stripeSecret = process.env.STRIPE_SECRET_KEY || '';
-// Let Stripe pick the correct API version based on the account; avoids TS literal mismatch
 export const stripe = new Stripe(stripeSecret || '');
 
-// Create a Stripe Checkout Session for company signup
 export const createCheckoutSession = async (req: Request, res: Response) => {
   try {
     const payload = req.body || {};
@@ -50,13 +46,11 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'planId is required' });
     }
 
-    // 1) Fail fast if email already exists
     const email: string | undefined = payload?.email;
     if (!email) return res.status(400).json({ message: 'Admin email is required' });
     const exists = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
     if (exists) return res.status(409).json({ message: 'An account with this email already exists' });
 
-    // 2) Create placeholder User + Company with inactive flags before payment
     const role = await prisma.role.findFirst({ where: { name: 'Company' as any }, select: { id: true } });
     const hashedPassword = await bcrypt.hash(String(payload.password || '12345678'), 10);
     const createdUser = await prisma.user.create({
@@ -90,13 +84,11 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
       select: { id: true }
     });
 
-    // Read plan details for amount and name
     const plan = await prisma.subscription.findUnique({ where: { id: planId } });
     if (!plan) return res.status(400).json({ message: 'Invalid planId' });
 
     const amountCents = Math.round((plan.rate || 0) * 100);
 
-    // Store only minimal metadata (Stripe limits each value to 500 chars)
     const metadata: Record<string, string> = {
       userId: createdUser.id,
       companyId: createdCompany.id,
@@ -128,7 +120,6 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
   } catch (e: any) {
     const msg = e?.message || String(e);
     console.error('createCheckoutSession error:', msg);
-    // Surface a clearer reason in development
     if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
       return res.status(500).json({ message: `Failed to create checkout session: ${msg}` });
     }
@@ -136,7 +127,6 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
   }
 };
 
-// Stripe Webhook to finalize signup after successful payment
 export const stripeWebhook = async (req: Request, res: Response) => {
   const sig = req.headers['stripe-signature'] as string;
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
@@ -158,7 +148,6 @@ export const stripeWebhook = async (req: Request, res: Response) => {
       } as any;
 
       if (decoded) {
-        // 1) Activate user and company
         const updatedUser = await prisma.user.update({
           where: { id: decoded.userId },
           data: { status: 'Active' as UserStatus, modifiedDate: new Date() },
@@ -171,7 +160,6 @@ export const stripeWebhook = async (req: Request, res: Response) => {
           select: { id: true }
         });
 
-        // Retrieve charge to snapshot card/payment details
         let cardBrand: string | undefined;
         let cardLast4: string | undefined;
         let cardExpMonth: number | undefined;
@@ -202,7 +190,6 @@ export const stripeWebhook = async (req: Request, res: Response) => {
           console.error('Failed to read payment details:', (e as any)?.message || e);
         }
 
-        // Create CompanyPlanDetail entry
         try {
           const plan = await prisma.subscription.findUnique({ where: { id: decoded.planId } });
           const startDate = new Date();
@@ -246,7 +233,6 @@ export const stripeWebhook = async (req: Request, res: Response) => {
           console.error('Failed to send reset password email after payment:', (e as any)?.message || e);
         }
 
-        // 4) Send thank-you email with login + reset link
         try {
           const appUrl = (process.env.FRONTEND_URL || 'http://localhost:8080').replace(/\/$/, '');
           const freshUser = await prisma.user.findUnique({ where: { id: updatedUser.id }, select: { passwordResetToken: true } });
@@ -276,7 +262,6 @@ export const stripeWebhook = async (req: Request, res: Response) => {
   }
 };
 
-// Fallback: finalize using session_id (in case webhook delivery fails in dev)
 export const finalizeBySessionId = async (req: Request, res: Response) => {
   try {
     const sessionId = String(req.query.session_id || '');
@@ -288,10 +273,8 @@ export const finalizeBySessionId = async (req: Request, res: Response) => {
     const planId = session.metadata?.planId as string;
     if (!userId || !companyId || !planId) return res.status(400).json({ message: 'Missing metadata on session' });
 
-    // already has an active plan?
     const existing = await prisma.companyPlanDetail.findFirst({ where: { companyId, isActive: true }, select: { id: true } });
     if (!existing) {
-      // Read payment info
       let cardBrand: string | undefined;
       let cardLast4: string | undefined;
       let cardExpMonth: number | undefined;
@@ -351,7 +334,6 @@ export const finalizeBySessionId = async (req: Request, res: Response) => {
       });
     }
 
-    // activate user and company (idempotent)
     await prisma.user.update({ where: { id: userId }, data: { status: 'Active' as UserStatus, modifiedDate: new Date() } });
     await prisma.companyDetail.update({ where: { id: companyId }, data: { isActive: true, modifiedDate: new Date() } });
 

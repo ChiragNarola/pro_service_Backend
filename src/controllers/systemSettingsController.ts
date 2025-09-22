@@ -22,5 +22,3 @@ export const updateSettingsController = async (req: Request, res: Response) => {
         return errorResponse(res, e?.message || 'Failed to update settings', 500);
     }
 };
-
-
