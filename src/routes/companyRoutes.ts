@@ -1,6 +1,6 @@
 import express, { Router } from 'express';
 import authenticate from '../logs/middlewares/authMiddleware';
-import { getCompanyStatisticsController, updateCompanyController, getAllCompaniesController, getCompanyByCompanyIdController } from '../controllers/companyController';
+import { getCompanyStatisticsController, updateCompanyController, getAllCompaniesController, getCompanyByCompanyIdController, changeCompanyStatusController } from '../controllers/companyController';
 
 const router: Router = express.Router();
 
@@ -477,8 +477,10 @@ router.get("/:companyId", authenticate, getCompanyByCompanyIdController);
 // Update Company Route
 router.put("/:companyId", authenticate, updateCompanyController);
 
+// Change Company Status
+router.patch("/:companyId/status", authenticate, changeCompanyStatusController);
+
 // Get All Companies Route
 router.get("/", authenticate, getAllCompaniesController);
-
 
 module.exports = router;

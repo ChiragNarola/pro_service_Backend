@@ -148,6 +148,9 @@ export const getRoleId = async (type: RoleName): Promise<Role | null> => {
       createdDate: true,
       modifiedBy: true,
       modifiedDate: true,
+      deletedBy: true,
+      deletedDate: true,
+      isDeleted: true,
       isActive: true,
       companyId: true,
     }

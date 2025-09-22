@@ -4,7 +4,7 @@ import express, { Router } from 'express';
 
 const router: Router = express.Router();
 
-const { fetchRole, createRole, fetchEmployeeRole, createEmployeeRole, fetchEmployeeDepartment, createEmployeeDepartment } = require('../controllers/masterController');
+const { fetchRole, createRole, fetchEmployeeRole, createEmployeeRole, fetchEmployeeDepartment, createEmployeeDepartment, fetchModules } = require('../controllers/masterController');
 // const { loginSchema } = require("../dtos/auth.dto");
 
 // import validate from '../middlewares/validateRequest';
@@ -108,7 +108,6 @@ router.get("/fetchEmployeeRole", fetchEmployeeRole);
  */
 router.post("/createEmployeeRole", createEmployeeRole);
 
-
 /**
  * @swagger
  * /fetchEmployeeDepartment:
@@ -154,6 +153,5 @@ router.get("/fetchEmployeeDepartment", fetchEmployeeDepartment);
  *                     type: string
  */
 router.post("/createEmployeeDepartment", createEmployeeDepartment);
-
 
 module.exports = router;

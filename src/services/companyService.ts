@@ -18,6 +18,38 @@ export interface UpdateCompanyInput {
   modifiedBy: string;
 }
 
+// Change company status only
+export const changeCompanyStatus = async (companyId: string, isActive: boolean, modifiedBy: string) => {
+  const company = await prisma.companyDetail.findUnique({ where: { id: companyId } });
+  if (!company) throw new Error('Company not found');
+
+  const updated = await prisma.companyDetail.update({
+    where: { id: companyId },
+    data: {
+      isActive,
+      modifiedBy,
+      modifiedDate: new Date(),
+    },
+    include: {
+      subscription: true,
+      user: {
+        select: { id: true, name: true, lastName: true, email: true, status: true }
+      },
+    }
+  });
+
+  await prisma.user.update({
+    where: { id: company.userId },
+    data: {
+      status: isActive ? 'Active' : 'InActive',
+      modifiedBy,
+      modifiedDate: new Date(),
+    },
+  });
+
+  return updated;
+};
+
 // Company Statistics Services
 export const getCompanyStatistics = async (companyId: string) => {
   // Get number of employees for the company
@@ -32,7 +64,7 @@ export const getCompanyStatistics = async (companyId: string) => {
 
   // Get number of active employees
   const activeEmployeeCount = await prisma.employeeDetail.count({
-    where: { 
+    where: {
       companyId,
       employeeStatus: 'Active'
     },
@@ -40,7 +72,7 @@ export const getCompanyStatistics = async (companyId: string) => {
 
   // Get number of active clients
   const activeClientCount = await prisma.clientDetail.count({
-    where: { 
+    where: {
       companyId,
       clientStatus: 'Active'
     },
@@ -141,7 +173,8 @@ export const updateCompany = async (
           email: true,
           status: true,
         }
-      }
+      },
+      planDetails: true,
     },
   });
 
@@ -151,7 +184,7 @@ export const updateCompany = async (
 // Get All Companies Service
 export const getAllCompanies = async (page: number = 1, limit: number = 10, search?: string) => {
   const skip = (page - 1) * limit;
-  
+
   // Build where clause for search
   const whereClause: any = {};
   if (search) {
@@ -208,7 +241,7 @@ export const getAllCompanies = async (page: number = 1, limit: number = 10, sear
       hasPrevPage: page > 1,
     }
   };
-}; 
+};
 
 // Get Company by Company ID Service
 export const getCompanyByCompanyId = async (companyId: string) => {
@@ -219,6 +252,11 @@ export const getCompanyByCompanyId = async (companyId: string) => {
       employeeDetail: true,
       clientDetails: true,
       subscription: true,
+      planDetails: {
+        include: {
+          subscription: true,
+        },
+      },
     },
   });
 
@@ -227,4 +265,4 @@ export const getCompanyByCompanyId = async (companyId: string) => {
   }
 
   return company;
-};  
+};

@@ -8,6 +8,35 @@ import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
+// Build a short code from company name (letters only, up to 4 chars)
+const buildCompanyShort = (name: string | null | undefined): string => {
+  const cleaned = String(name || '')
+    .replace(/[^a-zA-Z\s]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean);
+  if (cleaned.length === 0) return 'CMP';
+  const initials = cleaned.map(w => w[0]).join('');
+  const candidate = (initials || cleaned.join('')).toUpperCase();
+  return candidate.slice(0, 4);
+};
+
+// Generate invoice number: INV-<SHORT>-<YYYY>-<NNN>
+const generateInvoiceNumber = async (companyId: string): Promise<string> => {
+  const company = await prisma.companyDetail.findUnique({ where: { id: companyId }, select: { companyName: true } });
+  const short = buildCompanyShort(company?.companyName);
+  const now = new Date();
+  const year = now.getFullYear();
+  const firstOfYear = new Date(year, 0, 1);
+  const nextNumber = (await prisma.companyPlanDetail.count({
+    where: {
+      companyId,
+      createdDate: { gte: firstOfYear },
+    },
+  })) + 1;
+  const seq = String(nextNumber).padStart(3, '0');
+  return `INV-${short}-${year}-${seq}`;
+};
+
 const stripeSecret = process.env.STRIPE_SECRET_KEY || '';
 // Let Stripe pick the correct API version based on the account; avoids TS literal mismatch
 export const stripe = new Stripe(stripeSecret || '');
@@ -17,8 +46,6 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
   try {
     const payload = req.body || {};
     const planId: string | undefined = payload?.planId;
-    console.log("🚀 ~ createCheckoutSession ~ payload:", payload)
-    console.log("🚀 ~ createCheckoutSession ~ planId:", planId)
     if (!planId) {
       return res.status(400).json({ message: 'planId is required' });
     }
@@ -187,6 +214,7 @@ export const stripeWebhook = async (req: Request, res: Response) => {
             endDate = new Date(startDate);
             endDate.setFullYear(endDate.getFullYear() + 1);
           }
+          const invoiceNumber = await generateInvoiceNumber(decoded.companyId);
           await prisma.companyPlanDetail.create({
             data: ({
               companyId: decoded.companyId,
@@ -205,13 +233,13 @@ export const stripeWebhook = async (req: Request, res: Response) => {
               cardExpMonth: cardExpMonth as any,
               cardExpYear: cardExpYear as any,
               receiptUrl: receiptUrl,
+              invoiceNumber,
             } as any),
           });
         } catch (e) {
           console.error('Failed to store company plan detail after payment:', (e as any)?.message || e);
         }
 
-        // 3) Send reset-password email to admin
         try {
           await forgotPassword(updatedUser.email);
         } catch (e) {
@@ -299,6 +327,7 @@ export const finalizeBySessionId = async (req: Request, res: Response) => {
         endDate = new Date(startDate); endDate.setFullYear(endDate.getFullYear() + 1);
       }
 
+      const invoiceNumber = await generateInvoiceNumber(companyId);
       await prisma.companyPlanDetail.create({
         data: ({
           companyId,
@@ -317,6 +346,7 @@ export const finalizeBySessionId = async (req: Request, res: Response) => {
           cardExpMonth: cardExpMonth as any,
           cardExpYear: cardExpYear as any,
           receiptUrl,
+          invoiceNumber,
         } as any),
       });
     }
@@ -327,12 +357,8 @@ export const finalizeBySessionId = async (req: Request, res: Response) => {
 
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
     if (user?.email) {
-      try { await forgotPassword(user.email); } catch { }
       try {
         const appUrl = (process.env.FRONTEND_URL || 'http://localhost:8080').replace(/\/$/, '');
-        // fetch latest reset token and include link
-        const userWithToken = await prisma.user.findUnique({ where: { id: userId }, select: { passwordResetToken: true } });
-        const resetUrl = userWithToken?.passwordResetToken ? `${appUrl}/reset-password?token=${encodeURIComponent(userWithToken.passwordResetToken)}` : `${appUrl}/reset-password`;
         await sendEmail({
           to: [user.email],
           subject: 'Welcome to Pro Service - Your company is set up',
@@ -340,10 +366,8 @@ export const finalizeBySessionId = async (req: Request, res: Response) => {
                   <h2 style="margin:0 0 12px">Thank you for registering your company</h2>
                   <p>Your payment was successful and your account is ready.</p>
                   <p><a href="${appUrl}/login" target="_blank" rel="noopener" style="background:#0d6efd;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none">Go to Login</a></p>
-                  <p style="margin-top:12px;color:#555;font-size:14px">Set your password here:</p>
-                  <p><a href="${resetUrl}" target="_blank" rel="noopener">${resetUrl}</a></p>
                </div>`,
-          text: `Thank you for registering. Login: ${appUrl}/login\nReset password: ${resetUrl}`,
+          text: `Thank you for registering. Login: ${appUrl}/login`,
         });
       } catch { }
     }

@@ -1,13 +1,11 @@
-
 import express, { Router } from 'express';
-// import authenticate from '../middlewares/authMiddleware';
+import authenticate from '../logs/middlewares/authMiddleware';
+import validate from '../logs/middlewares/validateRequest';
+import { createSubscriptionSchema, updateSubscriptionSchema, createModuleSchema, updateModuleSchema } from '../dtos/subscription.dto';
 
 const router: Router = express.Router();
 
-const { fetchSubscription } = require('../controllers/subscriptionController');
-// const { loginSchema } = require("../dtos/auth.dto");
-
-// import validate from '../middlewares/validateRequest';
+const { fetchSubscription, createSubscription, updateSubscription, deleteSubscription, fetchModules, createModule, updateModule, getModuleById, fetchSubscriptionById, deleteModule } = require('../controllers/subscriptionController');
 
 /**
  * @swagger
@@ -40,5 +38,23 @@ const { fetchSubscription } = require('../controllers/subscriptionController');
  *                     type: string
  */
 router.get("/", fetchSubscription);
+
+router.get('/modules', authenticate, fetchModules);
+
+router.post('/modules', authenticate, validate(createModuleSchema), createModule);
+
+router.put('/modules/:id', authenticate, validate(updateModuleSchema), updateModule);
+
+router.get('/modules/:id', authenticate, getModuleById);
+
+router.delete('/modules/:id', authenticate, deleteModule);
+
+router.post("/", authenticate, validate(createSubscriptionSchema), createSubscription);
+
+router.put('/:id', authenticate, validate(updateSubscriptionSchema), updateSubscription);
+
+router.get('/:id', authenticate, fetchSubscriptionById);
+
+router.delete('/:id', authenticate, deleteSubscription);
 
 module.exports = router;

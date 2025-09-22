@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-// import { getAllSubscription } from "../services/subscriptionService";
 import * as masterService from "../services/masterService";
 import { successResponse, errorResponse } from "../utils/responseHelper";
 

@@ -46,7 +46,6 @@ function getTransporter(): Transporter {
 export async function sendEmail(options: SendEmailOptions): Promise<void> {
   const transporter = getTransporter();
   const from = process.env.SMTP_FROM || process.env.SMTP_USER as string;
-  console.log("🚀 ~ sendEmail ~ from:", from)
 
   await transporter.sendMail({
     from,

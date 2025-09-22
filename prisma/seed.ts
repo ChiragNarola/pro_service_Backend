@@ -316,7 +316,6 @@ async function main() {
     const superAdminUser = await prisma.user.findFirst({
         where: { roleId: superAdminRole?.id },
     });
-    console.log("🚀 ~ main ~ superAdminUser:", superAdminUser)
     await prisma.systemSettings.createMany({
         data: [
             { userId: superAdminUser?.id, emailNotifications: false, smsNotifications: false, paymentGateway: PaymentGateway.Stripe, createdBy: 'system' }

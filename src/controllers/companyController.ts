@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { getCompanyStatistics, updateCompany, getAllCompanies, UpdateCompanyInput, getCompanyByCompanyId } from '../services/companyService';
+import { getCompanyStatistics, updateCompany, getAllCompanies, UpdateCompanyInput, getCompanyByCompanyId, changeCompanyStatus } from '../services/companyService';
 import { successResponse, successResponseMessage, errorResponse } from '../utils/responseHelper';
 
 // Company Statistics Controller
@@ -67,5 +67,23 @@ export const getCompanyByCompanyIdController = async (req: Request, res: Respons
       return errorResponse(res, error.message, 404);
     }
     errorResponse(res, 'Error retrieving company', 500);
+  }
+};
+
+// Change Company Status Controller
+export const changeCompanyStatusController = async (req: Request, res: Response) => {
+  try {
+    const { companyId } = req.params;
+    const { isActive } = req.body as { isActive: boolean };
+    if (typeof isActive !== 'boolean') {
+      return errorResponse(res, 'isActive (boolean) is required', 400);
+    }
+    const updated = await changeCompanyStatus(companyId, isActive, req.user?.id || 'system');
+    successResponse(res, updated, 200);
+  } catch (error: any) {
+    if (error.message === 'Company not found') {
+      return errorResponse(res, error.message, 404);
+    }
+    errorResponse(res, 'Error changing company status', 500);
   }
 };

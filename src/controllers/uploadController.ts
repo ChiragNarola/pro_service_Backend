@@ -37,7 +37,7 @@ export const uploadProfileImageController = async (req: UploadRequest, res: Resp
 
     // Generate the file URL
     const fileUrl = `/uploads/profile-images/${req.file.filename}`;
-    
+
     // Get current user data first
     const currentUser = await prisma.user.findUnique({
       where: { id: userId },
@@ -46,7 +46,7 @@ export const uploadProfileImageController = async (req: UploadRequest, res: Resp
     if (!currentUser) {
       return errorResponse(res, 'User not found', 404);
     }
-    
+
     // Update user's profile photo URL in database
     const updatedUser = await updateUser({
       id: userId,
