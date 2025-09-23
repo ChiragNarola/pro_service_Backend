@@ -341,6 +341,9 @@ export const finalizeBySessionId = async (req: Request, res: Response) => {
     if (user?.email) {
       try {
         const appUrl = (process.env.FRONTEND_URL || 'http://localhost:8080').replace(/\/$/, '');
+        const freshUser = await prisma.user.findUnique({ where: { id: userId }, select: { passwordResetToken: true } });
+        const resetUrl = freshUser?.passwordResetToken ? `${appUrl}/reset-password?token=${encodeURIComponent(freshUser.passwordResetToken)}` : `${appUrl}/reset-password`;
+        console.log("🚀 ~ finalizeBySessionId ~ resetUrl:", resetUrl)
         await sendEmail({
           to: [user.email],
           subject: 'Welcome to Pro Service - Your company is set up',
@@ -348,10 +351,13 @@ export const finalizeBySessionId = async (req: Request, res: Response) => {
                   <h2 style="margin:0 0 12px">Thank you for registering your company</h2>
                   <p>Your payment was successful and your account is ready.</p>
                   <p><a href="${appUrl}/login" target="_blank" rel="noopener" style="background:#0d6efd;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none">Go to Login</a></p>
-               </div>`,
-          text: `Thank you for registering. Login: ${appUrl}/login`,
+                 <p style="margin-top:12px;color:#555;font-size:14px">Set your password here:</p>
+                    <p><a href="${resetUrl}" target="_blank" rel="noopener">${resetUrl}</a></p>
+                 </div>`,
+          text: `Thank you for registering. Login: ${appUrl}/login\nReset password: ${resetUrl}`,
         });
-      } catch { }
+      }
+      catch { }
     }
 
     return res.json({ success: true });

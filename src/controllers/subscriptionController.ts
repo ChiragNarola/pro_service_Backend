@@ -23,6 +23,7 @@ export const createSubscription = async (req: Request, res: Response): Promise<R
 
 export const updateSubscription = async (req: Request, res: Response): Promise<Response> => {
   try {
+    req.body.modifiedBy = req.user.id;
     const subscription = await subscriptionService.updateSubscription(req.params.id, req.body);
     return successResponse(res, subscription, 200);
   } catch (err: any) {
