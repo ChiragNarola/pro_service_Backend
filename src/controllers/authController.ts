@@ -16,6 +16,7 @@ export const login = async (req: Request, res: Response): Promise<Response> => {
       id: backendUser.id,
       name: backendUser.name,
       email: backendUser.email,
+      status: backendUser.status,
       role: backendUser.role,
       organization: backendUser.organization,
       mobileNumber: backendUser.mobileNumber,
@@ -65,7 +66,7 @@ export const companySignup = async (req: Request, res: Response): Promise<Respon
       const companyName = req.body.companyName || result.company?.companyName || "your company";
       const userName = `${req.body.name || ''} ${req.body.lastName || ''}`.trim() || 'there';
       const appName = process.env.APP_NAME || 'Pro Service';
-      const appUrl = process.env.APP_URL || 'http://localhost:8080';
+      const appUrl = String(process.env.APP_URL || process.env.FRONTEND_URL || '');
       const backendPublicUrl = process.env.BACKEND_PUBLIC_URL || appUrl;
       const invitePageUrl = `${backendPublicUrl.replace(/\/$/, '')}/invite.html?token=${encodeURIComponent(signupInvitationToken)}`;
       sendEmail({

@@ -21,6 +21,7 @@ export const getUserByIdController = async (req: Request, res: Response) => {
         status: true,
         profilePhotoURL: true,
         createdDate: true,
+        signatureURL: true,
         role: { select: { id: true, name: true } },
       },
     });

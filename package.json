@@ -4,7 +4,7 @@
   "description": "\"# Webapp_Backend\"",
   "main": "index.ts",
   "scripts": {
-    "dev": "nodemon",
+    "dev": "cross-env NODE_ENV=development ts-node -r dotenv/config index.ts dotenv_config_path=.env",
     "start": "cross-env NODE_ENV=production ts-node -r dotenv/config index.ts dotenv_config_path=.env.production",
     "build": "prisma generate && next build",
     "postinstall": "prisma generate",

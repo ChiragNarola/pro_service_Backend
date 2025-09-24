@@ -52,7 +52,8 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
     if (exists) return res.status(409).json({ message: 'An account with this email already exists' });
 
     const role = await prisma.role.findFirst({ where: { name: 'Company' as any }, select: { id: true } });
-    const hashedPassword = await bcrypt.hash(String(payload.password || '12345678'), 10);
+    const plainPassword = String(payload.password || '12345678');
+    const hashedPassword = await bcrypt.hash(plainPassword, 10);
     const createdUser = await prisma.user.create({
       data: {
         name: payload.name,
@@ -84,6 +85,42 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
       select: { id: true }
     });
 
+    // Create a reset token immediately after company creation and email credentials
+    try {
+      const resetToken = uuidv4();
+      const resetExpires = new Date(Date.now() + 1000 * 60 * 60);
+
+      await prisma.user.update({
+        where: { id: createdUser.id },
+        data: {
+          passwordResetToken: resetToken,
+          passwordResetExpiresAt: resetExpires,
+          modifiedDate: new Date(),
+        },
+      });
+
+      const appName = process.env.APP_NAME || 'Pro Service';
+      const appUrl = String(process.env.FRONTEND_URL || process.env.APP_URL || '').replace(/\/$/, '');
+      const resetUrl = `${appUrl}/reset-password?token=${encodeURIComponent(resetToken)}`;
+
+      await sendEmail({
+        to: [email],
+        subject: `${appName}: Your company was created`,
+        html: `<div style="font-family:Arial,Helvetica,sans-serif;line-height:1.5;color:#111">
+                <h2 style="margin:0 0 12px">Welcome to ${appName}</h2>
+                <p>Your company account has been created successfully.</p>
+                <p><strong>Login Email:</strong> ${email}</p>
+                <p><strong>Temporary Password:</strong> ${plainPassword}</p>
+                <p><strong>Reset Token:</strong> ${resetToken}</p>
+                <p style="margin-top:12px;color:#555">You can set your own password using the link below:</p>
+                <p><a href="${resetUrl}" target="_blank" rel="noopener">${resetUrl}</a></p>
+              </div>`,
+        text: `Your company was created.\nEmail: ${email}\nPassword: ${plainPassword}\nReset token: ${resetToken}\nReset link: ${resetUrl}`,
+      });
+    } catch (e) {
+      console.error('Failed to create reset token or send credentials email:', (e as any)?.message || e);
+    }
+
     const plan = await prisma.subscription.findUnique({ where: { id: planId } });
     if (!plan) return res.status(400).json({ message: 'Invalid planId' });
 
@@ -95,8 +132,7 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
       planId: String(planId),
     };
 
-    const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:8080').replace(/\/$/, '');
-    const backendUrl = (process.env.BACKEND_PUBLIC_URL || `http://localhost:${process.env.PORT || 4000}`).replace(/\/$/, '');
+    const frontendUrl = String(process.env.FRONTEND_URL || process.env.APP_URL || '').replace(/\/$/, '');
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
@@ -123,6 +159,68 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
     if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
       return res.status(500).json({ message: `Failed to create checkout session: ${msg}` });
     }
+    return res.status(500).json({ message: 'Failed to create checkout session' });
+  }
+};
+
+// Create Checkout session for an existing company/user (no user/company creation)
+export const createCheckoutSessionForExisting = async (req: Request, res: Response) => {
+  try {
+    const payload = req.body || {};
+    let { planId, userId, companyId } = payload as { planId?: string; userId?: string; companyId?: string };
+    if (!userId) {
+      return res.status(400).json({ message: 'userId is required' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, email: true, name: true, lastName: true } });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    // Derive companyId if not provided
+    if (!companyId) {
+      const companyByUser = await prisma.companyDetail.findFirst({ where: { userId: userId }, select: { id: true, planId: true } });
+      companyId = companyByUser?.id;
+      // If planId not provided, fallback to company's existing plan
+      if (!planId) planId = companyByUser?.planId || undefined;
+    }
+    if (!companyId) return res.status(404).json({ message: 'Company not found for user' });
+
+    const company = await prisma.companyDetail.findUnique({ where: { id: companyId }, select: { id: true, companyName: true, planId: true } });
+    if (!company) return res.status(404).json({ message: 'Company not found' });
+
+    // Ensure planId
+    if (!planId) planId = company.planId || undefined;
+    if (!planId) return res.status(400).json({ message: 'planId is required' });
+
+    const plan = await prisma.subscription.findUnique({ where: { id: planId } as any });
+    if (!plan) return res.status(400).json({ message: 'Invalid planId' });
+
+    const amountCents = Math.round((plan.rate || 0) * 100);
+    const metadata: Record<string, string> = { userId, companyId, planId } as any;
+
+    const frontendUrl = String(process.env.FRONTEND_URL || process.env.APP_URL || '').replace(/\/$/, '');
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      metadata,
+      line_items: [
+        {
+          quantity: 1,
+          price_data: {
+            currency: 'usd',
+            product_data: { name: `${plan.planName} Plan` },
+            unit_amount: amountCents,
+          },
+        },
+      ],
+      customer_email: user.email || undefined,
+      success_url: `${frontendUrl}/signup/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${frontendUrl}/signup/cancelled`,
+    });
+
+    return res.json({ url: session.url, sessionId: session.id });
+  } catch (e: any) {
+    const msg = e?.message || String(e);
+    console.error('createCheckoutSessionForExisting error:', msg);
     return res.status(500).json({ message: 'Failed to create checkout session' });
   }
 };
@@ -207,6 +305,7 @@ export const stripeWebhook = async (req: Request, res: Response) => {
               companyId: decoded.companyId,
               userId: decoded.userId,
               planId: decoded.planId,
+              duration: plan?.duration || SubscriptionType.Monthly,
               startDate,
               endDate,
               isActive: true,
@@ -234,9 +333,7 @@ export const stripeWebhook = async (req: Request, res: Response) => {
         }
 
         try {
-          const appUrl = (process.env.FRONTEND_URL || 'http://localhost:8080').replace(/\/$/, '');
-          const freshUser = await prisma.user.findUnique({ where: { id: updatedUser.id }, select: { passwordResetToken: true } });
-          const resetUrl = freshUser?.passwordResetToken ? `${appUrl}/reset-password?token=${encodeURIComponent(freshUser.passwordResetToken)}` : `${appUrl}/reset-password`;
+          const appUrl = String(process.env.FRONTEND_URL || process.env.APP_URL || '').replace(/\/$/, '');
           await sendEmail({
             to: [updatedUser.email],
             subject: 'Welcome to Pro Service - Your company is set up',
@@ -244,10 +341,8 @@ export const stripeWebhook = async (req: Request, res: Response) => {
                     <h2 style="margin:0 0 12px">Thank you for registering your company</h2>
                     <p>Your payment was successful and your account is ready.</p>
                     <p><a href="${appUrl}/login" target="_blank" rel="noopener" style="background:#0d6efd;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none">Go to Login</a></p>
-                    <p style="margin-top:12px;color:#555;font-size:14px">Set your password here:</p>
-                    <p><a href="${resetUrl}" target="_blank" rel="noopener">${resetUrl}</a></p>
                  </div>`,
-            text: `Thank you for registering. Login: ${appUrl}/login\nReset password: ${resetUrl}`,
+            text: `Thank you for registering. Login: ${appUrl}/login`,
           });
         } catch (e) {
           console.error('Failed to send welcome email:', (e as any)?.message || e);
@@ -316,6 +411,7 @@ export const finalizeBySessionId = async (req: Request, res: Response) => {
           companyId,
           userId,
           planId,
+          duration: plan?.duration || SubscriptionType.Monthly,
           startDate,
           endDate,
           isActive: true,
@@ -338,28 +434,24 @@ export const finalizeBySessionId = async (req: Request, res: Response) => {
     await prisma.companyDetail.update({ where: { id: companyId }, data: { isActive: true, modifiedDate: new Date() } });
 
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
+
     if (user?.email) {
       try {
-        const appUrl = (process.env.FRONTEND_URL || 'http://localhost:8080').replace(/\/$/, '');
-        const freshUser = await prisma.user.findUnique({ where: { id: userId }, select: { passwordResetToken: true } });
-        const resetUrl = freshUser?.passwordResetToken ? `${appUrl}/reset-password?token=${encodeURIComponent(freshUser.passwordResetToken)}` : `${appUrl}/reset-password`;
-        console.log("🚀 ~ finalizeBySessionId ~ resetUrl:", resetUrl)
+        const appUrl = String(process.env.FRONTEND_URL || process.env.APP_URL || '').replace(/\/$/, '');
+
         await sendEmail({
           to: [user.email],
-          subject: 'Welcome to Pro Service - Your company is set up',
+          subject: 'Welcome to Pro Service - Payment Done Successfully',
           html: `<div style="font-family:Arial,Helvetica,sans-serif;line-height:1.5;color:#111">
                   <h2 style="margin:0 0 12px">Thank you for registering your company</h2>
                   <p>Your payment was successful and your account is ready.</p>
                   <p><a href="${appUrl}/login" target="_blank" rel="noopener" style="background:#0d6efd;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none">Go to Login</a></p>
-                 <p style="margin-top:12px;color:#555;font-size:14px">Set your password here:</p>
-                    <p><a href="${resetUrl}" target="_blank" rel="noopener">${resetUrl}</a></p>
                  </div>`,
-          text: `Thank you for registering. Login: ${appUrl}/login\nReset password: ${resetUrl}`,
+          text: `Thank you for registering. Login: ${appUrl}/login`,
         });
       }
       catch { }
     }
-
     return res.json({ success: true });
   } catch (e: any) {
     const msg = e?.message || String(e);

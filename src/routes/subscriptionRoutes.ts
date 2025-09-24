@@ -5,7 +5,7 @@ import { createSubscriptionSchema, updateSubscriptionSchema, createModuleSchema,
 
 const router: Router = express.Router();
 
-const { fetchSubscription, createSubscription, updateSubscription, deleteSubscription, fetchModules, createModule, updateModule, getModuleById, fetchSubscriptionById, deleteModule } = require('../controllers/subscriptionController');
+const { fetchSubscription, createSubscription, updateSubscription, deleteSubscription, fetchModules, createModule, updateModule, getModuleById, fetchSubscriptionById, deleteModule, fetchCompanyPlanDetails } = require('../controllers/subscriptionController');
 
 /**
  * @swagger
@@ -48,6 +48,9 @@ router.put('/modules/:id', authenticate, validate(updateModuleSchema), updateMod
 router.get('/modules/:id', authenticate, getModuleById);
 
 router.delete('/modules/:id', authenticate, deleteModule);
+
+// CompanyPlanDetail - list with optional filters
+router.get('/company-plan-details', authenticate, fetchCompanyPlanDetails);
 
 router.post("/", authenticate, validate(createSubscriptionSchema), createSubscription);
 

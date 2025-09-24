@@ -27,7 +27,7 @@ This document describes the profile image upload functionality that has been imp
 
 ## Frontend Implementation
 
-### 1. API Service (`src/feature/user/api.ts`)
+### 1. API Service (`src/feature/user/slice.ts`)
 - `uploadProfileImage(file: File)` function
 - Sends FormData with multipart/form-data content type
 

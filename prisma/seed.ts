@@ -315,13 +315,13 @@ async function main() {
     const superAdminUser = await prisma.user.findFirst({
         where: { roleId: superAdminRole?.id },
     });
+   
     await prisma.systemSettings.createMany({
         data: [
-            { userId: superAdminUser?.id, emailNotifications: false, smsNotifications: false, paymentGateway: PaymentGateway.Stripe, createdBy: 'system' }
+            { userId: superAdminUser?.id, emailNotifications: false, smsNotifications: false, paymentGateway: PaymentGateway.Stripe, createdBy: 'system', billingCurrency: 'USD', billingInvoicePrefix: 'INV-', billingTaxRate: 0, primaryColor: '#0ea5e9', secondaryColor: '#64748b',  brandingLogo: null, supportEmail: 'support@mailsac.com', supportAutoAssign: true, supportSlaHours: 24, supportAutoReply: true, stripePubKey: '', stripeSecretKey: '' },
         ],
         skipDuplicates: true,
     });
-    console.log("Seeding complete.");
 }
 
 main()

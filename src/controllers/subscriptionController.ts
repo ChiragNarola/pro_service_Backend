@@ -103,3 +103,14 @@ export const getModuleById = async (req: Request, res: Response): Promise<Respon
     return errorResponse(res, "Server error", 500);
   }
 };
+
+export const fetchCompanyPlanDetails = async (_req: Request, res: Response): Promise<Response> => {
+  try {
+    console.log("fetchCompanyPlanDetails Controller");
+    const items = await subscriptionService.getCompanyPlanDetails();
+    return successResponse(res, items, 200);
+  } catch (err: any) {
+    console.log("🚀 ~ fetchCompanyPlanDetails ~ err:", err)
+    return errorResponse(res, "Server error", 500);
+  }
+};

@@ -14,7 +14,7 @@ const swaggerDefinition = {
   },
   servers: [
     {
-      url: process.env.BASE_URL || "http://localhost:4000",
+      url: String(process.env.BASE_URL || ''),
     },
   ],
 };

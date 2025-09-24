@@ -1,13 +1,11 @@
-import { PrismaClient, Subscription, SubscriptionType, Module } from '@prisma/client';
-import { Response } from 'express';
-import { errorResponse } from '../utils/responseHelper';
+import { PrismaClient, Subscription, SubscriptionType, Module, CompanyPlanDetail } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 /**
  * Get all active countries ordered by name.
  */
-export const getAllSubscription = async (): Promise<Subscription[]> => {
+export const getAllSubscription = async (): Promise<(Subscription & { purchaseCount: number })[]> => {
   const subscriptionData = await prisma.subscription.findMany({
     where: { isActive: true },
     orderBy: { planName: 'asc' },
@@ -23,10 +21,17 @@ export const getAllSubscription = async (): Promise<Subscription[]> => {
           module: true,
         },
       },
+      _count: {
+        select: { companyPlanDetails: true },
+      },
     },
   });
 
-  return subscriptionData;
+  // Map to expose a simple purchaseCount field
+  return subscriptionData.map((s: any) => ({
+    ...s,
+    purchaseCount: s?._count?.companyPlanDetails ?? 0,
+  }));
 };
 
 export type CreateSubscriptionInput = {
@@ -109,7 +114,7 @@ export const updateSubscription = async (id: string, input: UpdateSubscriptionIn
 
 export const deleteSubscription = async (id: string, deletedBy: string) => {
 
-  const deleted = await prisma.subscription.update({  
+  const deleted = await prisma.subscription.update({
     where: { id },
     data: {
       isActive: false,
@@ -199,9 +204,11 @@ export const getSubscriptionById = async (id: string) => {
           module: true,
         },
       },
+      _count: { select: { companyPlanDetails: true } },
     },
   });
-  return subscription;
+  if (!subscription) return subscription;
+  return { ...(subscription as any), purchaseCount: (subscription as any)?._count?.companyPlanDetails ?? 0 };
 };
 
 export const deleteModule = async (id: string, createdBy: string) => {
@@ -214,4 +221,29 @@ export const deleteModule = async (id: string, createdBy: string) => {
     }
   });
   return deleted;
+};
+
+export const getCompanyPlanDetails = async (): Promise<CompanyPlanDetail[]> => {
+
+  console.log("getCompanyPlanDetails Service");
+
+  const items = await prisma.companyPlanDetail.findMany({
+    orderBy: { createdDate: 'desc' },
+    include: {
+      company: {
+        select: {
+          id: true,
+          companyName: true,
+        }
+      },
+      subscription: true,
+      user: {
+        select: {
+          id: true,
+          name: true,
+        }
+      },
+    },
+  });
+  return items;
 };

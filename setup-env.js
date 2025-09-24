@@ -16,8 +16,8 @@ PORT=4000
 NODE_ENV=development
 
 # CORS Configuration
-CORS_ORIGIN=http://localhost:8080
-BASE_URL=http://localhost:4000
+CORS_ORIGIN=
+BASE_URL=
 `;
 
 const envProductionContent = `# JWT Configuration
@@ -32,8 +32,8 @@ PORT=4000
 NODE_ENV=production
 
 # CORS Configuration
-CORS_ORIGIN=http://localhost:8080
-BASE_URL=http://localhost:4000
+CORS_ORIGIN=
+BASE_URL=
 `;
 
 try {

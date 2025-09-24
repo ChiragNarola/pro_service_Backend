@@ -70,6 +70,7 @@ export const acceptInvitationController = async (req: Request, res: Response) =>
                 companyId: company.id,
                 userId: user.id,
                 planId: plan?.id || company.planId,
+                duration: plan?.duration || SubscriptionType.Monthly,
                 startDate,
                 endDate,
                 isActive: true,

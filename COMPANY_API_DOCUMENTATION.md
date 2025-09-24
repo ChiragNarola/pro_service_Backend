@@ -162,7 +162,7 @@ The update company service includes the following business logic:
 ```bash
 # Update company
 curl -X PUT \
-  http://localhost:3000/company/123e4567-e89b-12d3-a456-426614174000 \
+  <BASE_URL>/company/123e4567-e89b-12d3-a456-426614174000 \
   -H 'Authorization: Bearer YOUR_JWT_TOKEN' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -173,7 +173,7 @@ curl -X PUT \
 
 # Get company details
 curl -X GET \
-  http://localhost:3000/company/123e4567-e89b-12d3-a456-426614174000 \
+  <BASE_URL>/company/123e4567-e89b-12d3-a456-426614174000 \
   -H 'Authorization: Bearer YOUR_JWT_TOKEN'
 ```
 
@@ -184,7 +184,7 @@ const axios = require('axios');
 const updateCompany = async (companyId, updateData, token) => {
   try {
     const response = await axios.put(
-      `http://localhost:3000/company/${companyId}`,
+      `${BASE_URL}/company/${companyId}`,
       updateData,
       {
         headers: {
@@ -203,7 +203,7 @@ const updateCompany = async (companyId, updateData, token) => {
 const getCompany = async (companyId, token) => {
   try {
     const response = await axios.get(
-      `http://localhost:3000/company/${companyId}`,
+      `${BASE_URL}/company/${companyId}`,
       {
         headers: {
           'Authorization': `Bearer ${token}`

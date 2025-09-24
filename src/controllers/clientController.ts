@@ -43,7 +43,7 @@ export const createClientController = async (req: Request, res: Response) => {
     try {
       const user = (client as any)?.user;
       if (req.body?.status === 'Invited' && user?.invitationToken && user?.email) {
-        const baseUrl = process.env.BACKEND_PUBLIC_URL || `http://localhost:${process.env.PORT || 4000}`;
+        const baseUrl = String(process.env.BACKEND_PUBLIC_URL || process.env.BASE_URL || '');
         const inviteLink = `${baseUrl}/invite.html?token=${encodeURIComponent(user.invitationToken)}`;
         const acceptLink = `${inviteLink}&action=accept`;
         const rejectLink = `${inviteLink}&action=reject`;

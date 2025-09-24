@@ -37,6 +37,12 @@ export const upsertSystemSettings = async (
         normalized.paymentGateway = normalized.paymentGateway as PaymentGateway;
     }
 
+    // Verify user exists before creating settings
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+        throw new Error(`User with id ${userId} not found`);
+    }
+
     const existing = await prisma.systemSettings.findFirst({ where: { userId } });
 
     if (!existing) {

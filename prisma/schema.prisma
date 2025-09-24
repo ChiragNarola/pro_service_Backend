@@ -34,6 +34,7 @@ model User {
   password               String?             @db.VarChar(255)
   mobileNumber           String?             @db.VarChar(20)
   profilePhotoURL        String?             @db.VarChar(1000)
+  signatureURL           String?             @db.VarChar(1000)
   invitationToken        String?             @db.VarChar(255)
   invitationExpiresAt    DateTime?
   passwordResetToken     String?             @db.VarChar(255)
@@ -169,6 +170,7 @@ model CompanyPlanDetail {
   companyId       String        @db.Uuid
   userId          String?       @db.Uuid
   planId          String        @db.Uuid
+  duration        SubscriptionType
   startDate       DateTime      @default(now())
   endDate         DateTime?
   isActive        Boolean       @default(true)

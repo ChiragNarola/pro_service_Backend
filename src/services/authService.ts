@@ -13,13 +13,14 @@ export const loginUser = async (
   password: string
 ): Promise<{ user: Omit<User, 'password'>; token: string }> => {
   const user = await authenticateUser(email, password);
+  console.log("🚀 ~ loginUser ~ user:", user)
   if (!user) {
     throw new Error('Invalid email or password');
   }
 
-  if ((user as any)?.status && (user as any).status !== 'Active') {
-    throw new Error('Your account is not active. Please contact support.');
-  }
+  // if ((user as any)?.status && (user as any).status !== 'Active') {
+  //   throw new Error('Your account is not active. Please contact support.');
+  // }
 
   const token = generateToken(user);
   return { user, token };
@@ -133,7 +134,7 @@ export const forgotPassword = async (email: string): Promise<{ success: boolean;
     });
 
     const appName = process.env.APP_NAME || 'Pro Service';
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:8080/';
+    const frontendUrl = String(process.env.FRONTEND_URL || process.env.APP_URL || '');
     const resetUrl = `${frontendUrl}/reset-password?token=${encodeURIComponent(resetToken)}`;
 
     await sendEmail({

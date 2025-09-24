@@ -20,12 +20,18 @@ const uploadRoutes = require("./src/routes/uploadRoutes");
 
 const { DBconnection } = require("./src/config/DBconnection");
 
-dotenv.config();
+// Load .env in development and .env.production in production when not already loaded
+if (!process.env.DOTENV_CONFIG_PATH) {
+  const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env';
+  dotenv.config({ path: envFile });
+} else {
+  dotenv.config({ path: process.env.DOTENV_CONFIG_PATH });
+}
 
 const app = express();
 
 app.use(cors({
-  origin: 'http://localhost:8080',
+  origin: String(process.env.CORS_ORIGIN || process.env.FRONTEND_URL || process.env.APP_URL || ''),
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   credentials: true,
 }));
@@ -64,8 +70,8 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 });
 
 app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
-  console.log(`Swagger docs available at http://localhost:${port}`);
+  console.log(`Server is running on ${process.env.BASE_URL || `http://localhost:${port}`}`);
+  console.log(`Swagger docs available at ${(process.env.BASE_URL || `http://localhost:${port}`)}`);
 
   const hasSmtpConfig = !!(process.env.SMTP_HOST && process.env.SMTP_PORT && process.env.SMTP_USER && process.env.SMTP_PASS);
   if (hasSmtpConfig) {
