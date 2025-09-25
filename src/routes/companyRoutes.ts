@@ -1,6 +1,8 @@
 import express, { Router } from 'express';
 import authenticate from '../logs/middlewares/authMiddleware';
-import { getCompanyStatisticsController, updateCompanyController, getAllCompaniesController, getCompanyByCompanyIdController, changeCompanyStatusController } from '../controllers/companyController';
+import { getCompanyStatisticsController, updateCompanyController, getAllCompaniesController, getCompanyByCompanyIdController, changeCompanyStatusController, getCompanyByUserIDController, getLeavesByCompanyIdController, addLeaveController, updateLeaveController, deleteLeaveController } from '../controllers/companyController';
+import { updateCompanySchema, addLeaveSchema, updateLeaveSchema } from '../dtos/company.dto';
+import validate from '../logs/middlewares/validateRequest';
 
 const router: Router = express.Router();
 
@@ -241,6 +243,92 @@ const router: Router = express.Router();
 
 /**
  * @swagger
+ * /company/user/{userId}:
+ *   get:
+ *     summary: Get company by user ID
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     description: Retrieve company details by user ID with related data (user, employees, clients, subscription)
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: User ID
+ *     responses:
+ *       200:
+ *         description: Company details retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 isSuccess:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   allOf:
+ *                     - $ref: '#/components/schemas/CompanyDetail'
+ *                     - type: object
+ *                       properties:
+ *                         user:
+ *                           type: object
+ *                           description: User details
+ *                         employeeDetail:
+ *                           type: array
+ *                           description: Employee details
+ *                         clientDetails:
+ *                           type: array
+ *                           description: Client details
+ *                         subscription:
+ *                           type: object
+ *                           description: Subscription details
+ *       400:
+ *         description: Bad request - User ID is required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 isSuccess:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: User ID is required
+ *       404:
+ *         description: Company not found for this user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 isSuccess:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Company not found for this user
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 isSuccess:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Error retrieving company by user ID
+ */
+
+/**
+ * @swagger
  * /company/{companyId}/statistics:
  *   get:
  *     summary: Get company statistics
@@ -468,6 +556,9 @@ const router: Router = express.Router();
  *                   example: Error updating company
  */
 
+// Get Company by User ID Route
+router.get("/user/:userId", authenticate, getCompanyByUserIDController);
+
 // Company Statistics Route
 router.get("/:companyId/statistics", authenticate, getCompanyStatisticsController);
 
@@ -475,12 +566,24 @@ router.get("/:companyId/statistics", authenticate, getCompanyStatisticsControlle
 router.get("/:companyId", authenticate, getCompanyByCompanyIdController);
 
 // Update Company Route
-router.put("/:companyId", authenticate, updateCompanyController);
+router.put("/:companyId", authenticate, validate(updateCompanySchema), updateCompanyController);
 
 // Change Company Status
 router.patch("/:companyId/status", authenticate, changeCompanyStatusController);
 
 // Get All Companies Route
 router.get("/", authenticate, getAllCompaniesController);
+
+//Get Leaves By Company ID Route
+router.get("/:companyId/leaves/:year", authenticate, getLeavesByCompanyIdController);
+
+// Add Leave Route
+router.post("/:companyId/leaves", authenticate, validate(addLeaveSchema), addLeaveController);
+
+// Update Leave Route
+router.put("/:companyId/leaves", authenticate, validate(updateLeaveSchema), updateLeaveController);
+
+// Delete Leave Route
+router.delete("/:companyId/leaves", authenticate, deleteLeaveController);
 
 module.exports = router;

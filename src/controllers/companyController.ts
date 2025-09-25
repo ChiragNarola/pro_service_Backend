@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { getCompanyStatistics, updateCompany, getAllCompanies, UpdateCompanyInput, getCompanyByCompanyId, changeCompanyStatus } from '../services/companyService';
+import { getCompanyStatistics, updateCompany, getAllCompanies, UpdateCompanyInput, getCompanyByCompanyId, changeCompanyStatus, getCompanyByUserID, getLeavesByCompanyId, addLeave, updateLeave, deleteLeave } from '../services/companyService';
 import { successResponse, successResponseMessage, errorResponse } from '../utils/responseHelper';
 
 export const getCompanyStatisticsController = async (req: Request, res: Response) => {
@@ -20,6 +20,7 @@ export const getCompanyStatisticsController = async (req: Request, res: Response
 export const updateCompanyController = async (req: Request, res: Response) => {
   try {
     const { companyId } = req.params;
+
     const input: UpdateCompanyInput = {
       ...req.body,
       modifiedBy: req.user?.id || 'system',
@@ -79,5 +80,64 @@ export const changeCompanyStatusController = async (req: Request, res: Response)
       return errorResponse(res, error.message, 404);
     }
     errorResponse(res, 'Error changing company status', 500);
+  }
+};
+
+export const getCompanyByUserIDController = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      return errorResponse(res, 'User ID is required', 400);
+    }
+
+    const company = await getCompanyByUserID(userId);
+    successResponse(res, company, 200);
+  } catch (error: any) {
+    if (error.message === 'Company not found for this user') {
+      return errorResponse(res, error.message, 404);
+    }
+    errorResponse(res, 'Error retrieving company by user ID', 500);
+  }
+};
+
+export const getLeavesByCompanyIdController = async (req: Request, res: Response) => {
+  try {
+    const { companyId } = req.params;
+    const { year } = req.params;
+    const leaves = await getLeavesByCompanyId(companyId, year);
+    successResponse(res, leaves, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error retrieving leaves by company ID', 500);
+  }
+};
+
+export const addLeaveController = async (req: Request, res: Response) => {
+  try {
+    const { companyId } = req.params;
+    const leave = await addLeave(companyId, req.body, req.user?.id || 'system');
+    successResponse(res, leave, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error adding leave', 500);
+  }
+};
+
+export const updateLeaveController = async (req: Request, res: Response) => {
+  try {
+    const { companyId } = req.params;
+    const leave = await updateLeave(companyId, req.body, req.user?.id || 'system');
+    successResponse(res, leave, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error updating leave', 500);
+  }
+};
+
+export const deleteLeaveController = async (req: Request, res: Response) => {
+  try {
+    const { companyId } = req.params;
+    const leave = await deleteLeave(companyId, req.body, req.user?.id || 'system');
+    successResponse(res, leave, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error deleting leave', 500);
   }
 };

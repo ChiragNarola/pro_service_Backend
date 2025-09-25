@@ -158,8 +158,31 @@ model CompanyDetail {
   user                User?               @relation(fields: [userId], references: [id])
   planDetails         CompanyPlanDetail[]
   employeeDetail      EmployeeDetail[]
+  companyLeaves       CompanyLeave[]
 
   @@index([planId])
+  @@index([createdBy])
+  @@index([modifiedBy])
+  @@index([deletedBy])
+}
+
+model CompanyLeave {
+  id            String         @id @default(uuid()) @db.Uuid
+  companyId     String         @db.Uuid
+  leaveDate     DateTime
+  leaveName     String         @db.VarChar(100)
+  year          String?        @db.VarChar(10)
+  isActive      Boolean        @default(true)
+  createdBy     String         @db.VarChar(100)
+  createdDate   DateTime       @default(now())
+  modifiedBy    String?        @db.VarChar(100)
+  modifiedDate  DateTime?
+  deletedBy     String?        @db.VarChar(100)
+  deletedDate   DateTime?
+  isDeleted     Boolean        @default(false)
+  company       CompanyDetail  @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
   @@index([createdBy])
   @@index([modifiedBy])
   @@index([deletedBy])
@@ -384,7 +407,6 @@ enum RoleName {
   Client     @map("Client")
   Employee   @map("Employee")
 }
-
 
 enum SubscriptionType {
   Monthly @map("Monthly")

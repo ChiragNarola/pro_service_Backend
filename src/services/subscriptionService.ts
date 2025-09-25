@@ -225,8 +225,6 @@ export const deleteModule = async (id: string, createdBy: string) => {
 
 export const getCompanyPlanDetails = async (): Promise<CompanyPlanDetail[]> => {
 
-  console.log("getCompanyPlanDetails Service");
-
   const items = await prisma.companyPlanDetail.findMany({
     orderBy: { createdDate: 'desc' },
     include: {

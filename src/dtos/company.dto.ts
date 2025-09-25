@@ -7,9 +7,9 @@ export interface UpdateCompanyDto {
   address?: string;
   city?: string;
   state?: string;
-  planId?: string;
   isActive?: boolean;
-  paymentMethod?: string;
+  website?: string;
+  foundedYear?: string;
 }
 
 export const companyResponseSchema = Joi.object({
@@ -22,16 +22,18 @@ export const companyResponseSchema = Joi.object({
   address: Joi.string().required(),
   city: Joi.string().required(),
   state: Joi.string().required(),
-  planId: Joi.string().uuid().allow(null).required(),
   isActive: Joi.boolean().required(),
+  website: Joi.string().allow(null).required(),
+  planId: Joi.string().uuid().allow(null).required(),
+  paymentMethod: Joi.string().allow(null).required(),
   paymentDateTime: Joi.date().required(),
   startDateTime: Joi.date().required(),
-  paymentMethod: Joi.string().allow(null).required(),
   endDateTime: Joi.date().allow(null).required(),
   createdBy: Joi.string().required(),
   createdDate: Joi.date().required(),
   modifiedBy: Joi.string().allow(null).required(),
   modifiedDate: Joi.date().allow(null).required(),
+  foundedYear: Joi.string().allow(null).required(),
 });
 
 export interface CompanyResponseDto {
@@ -46,12 +48,33 @@ export interface CompanyResponseDto {
   state: string;
   planId: string | null;
   isActive: boolean;
-  paymentDateTime: Date;
-  startDateTime: Date;
+  website: string | null;
+  foundedYear: string | null;
   paymentMethod: string | null;
-  endDateTime: Date | null;
-  createdBy: string;
-  createdDate: Date;
-  modifiedBy: string | null;
-  modifiedDate: Date | null;
+  paymentDateTime: Date;
 } 
+
+export const updateCompanySchema = Joi.object({
+  companyName: Joi.string().required(),
+  companyEmail: Joi.string().required(),
+  industry: Joi.string().required(),
+  companyMobileNumber: Joi.string().required(),
+  address: Joi.string().required(),
+  city: Joi.string().required(),
+  state: Joi.string().required(),
+  isActive: Joi.boolean().required(),
+  website: Joi.string().required(),
+  foundedYear: Joi.string().required(),
+}); 
+
+export const addLeaveSchema = Joi.object({
+  leaveName: Joi.string().required(),
+  leaveDate: Joi.date().required(),
+  year: Joi.string().required(),
+});
+
+export const updateLeaveSchema = Joi.object({
+  leaveName: Joi.string().required(),
+  leaveDate: Joi.date().required(),
+  year: Joi.string().required(),
+});

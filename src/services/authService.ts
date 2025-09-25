@@ -13,7 +13,6 @@ export const loginUser = async (
   password: string
 ): Promise<{ user: Omit<User, 'password'>; token: string }> => {
   const user = await authenticateUser(email, password);
-  console.log("🚀 ~ loginUser ~ user:", user)
   if (!user) {
     throw new Error('Invalid email or password');
   }

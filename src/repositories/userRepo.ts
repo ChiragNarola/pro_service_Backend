@@ -16,63 +16,10 @@ const userRepo = new GenericRepo<
   Parameters<typeof prisma.user.findMany>[0]['orderBy']
 >(prisma.user);
 
-interface CreateUserDTO {
-  name: string;
-  email: string;
-  password?: string;
-  mobileNumber?: string;
-  profilePhotoURL?: string;
-  roleId?: string;
-  createdBy?: string;
-}
-
 interface EmployeeData {
   id: string;
   userId: string;
   status: UserStatus;
-}
-
-interface EmployeeUpdate {
-  id: string;
-  userId: string;
-  name: string;
-  lastName: string,
-  email?: string;
-  mobileNumber: string;
-  companyMobileNumber: string;
-  address: string;
-  city: string;
-  state: string;
-  departmentId: string;
-  employeeRoleId: string;
-  joinDate: Date | string;
-  companyId: string;
-  password: string;
-  roleId: string;
-  salary: string;
-  skills: string;
-  eid: string;
-  managerId: string;
-  employeeStatus: UserStatus;
-  status: UserStatus;
-  createdBy: string;
-  modifiedBy: string;
-  modifiedDate: Date | string;
-}
-
-interface ClientData {
-  id: string;
-  userId: string;
-  companyId: string;
-  clientCompanyName?: string;
-  clientEmail?: string;
-  clientPhone?: string;
-  address: string;
-  city: string;
-  state: string;
-  notes?: string;
-  clientStatus: UserStatus;
-  createdBy: string;
 }
 
 export const authenticateUser = async (
@@ -338,12 +285,9 @@ export const updateCompanyData = async (companyData: Partial<CompanyDetail>): Pr
       address: companyData.address!,
       city: companyData.city!,
       state: companyData.state!,
-      planId: companyData.planId,
+      website: companyData.website,
+      foundedYear: companyData.foundedYear,
       isActive: companyData.isActive!,
-      paymentDateTime: companyData.paymentDateTime!,
-      startDateTime: companyData.startDateTime!,
-      paymentMethod: companyData.paymentMethod,
-      endDateTime: companyData.endDateTime,
       createdBy: companyData.createdBy!,
       createdDate: companyData.createdDate!,
       modifiedBy: companyData.modifiedBy,

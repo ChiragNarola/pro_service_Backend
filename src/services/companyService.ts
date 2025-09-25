@@ -15,6 +15,8 @@ export interface UpdateCompanyInput {
   isActive?: boolean;
   paymentMethod?: string;
   modifiedBy: string;
+  website?: string;
+  foundedYear?: string;
 }
 
 export const changeCompanyStatus = async (companyId: string, isActive: boolean, modifiedBy: string) => {
@@ -47,7 +49,7 @@ export const changeCompanyStatus = async (companyId: string, isActive: boolean, 
 
   return updated;
 };
-  
+
 export const getCompanyStatistics = async (companyId: string) => {
   const employeeCount = await prisma.employeeDetail.count({
     where: { companyId },
@@ -99,10 +101,7 @@ export const getCompanyStatistics = async (companyId: string) => {
   };
 };
 
-export const updateCompany = async (
-  id: string,
-  input: UpdateCompanyInput
-): Promise<object> => {
+export const updateCompany = async (id: string, input: UpdateCompanyInput): Promise<object> => {
   const existingCompany = await prisma.companyDetail.findFirst({
     where: { id },
     include: { user: true }
@@ -137,10 +136,8 @@ export const updateCompany = async (
     state: input.state || existingCompany.state,
     planId: input.planId || existingCompany.planId,
     isActive: input.isActive !== undefined ? input.isActive : existingCompany.isActive,
-    paymentDateTime: existingCompany.paymentDateTime,
-    startDateTime: existingCompany.startDateTime,
-    paymentMethod: existingCompany.paymentMethod,
-    endDateTime: existingCompany.endDateTime,
+    website: input.website || existingCompany.website,
+    foundedYear: input.foundedYear || existingCompany.foundedYear,
     createdBy: existingCompany.createdBy,
     createdDate: existingCompany.createdDate,
     modifiedBy: input.modifiedBy,
@@ -247,3 +244,94 @@ export const getCompanyByCompanyId = async (companyId: string) => {
 
   return company;
 };
+
+export const getCompanyByUserID = async (userId: string) => {
+  const company = await prisma.companyDetail.findFirst({
+    where: {
+      userId: userId,
+      isDeleted: false
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          lastName: true,
+          email: true,
+          status: true,
+        }
+      },
+      employeeDetail: true,
+      clientDetails: true,
+      subscription: true,
+      planDetails: {
+        include: {
+          subscription: true,
+        },
+      },
+    },
+  });
+
+  if (!company) {
+    throw new Error('Company not found for this user');
+  }
+
+  return company;
+};
+
+export const getLeavesByCompanyId = async (companyId: string, year: string) => {
+  console.log("🚀 ~ getLeavesByCompanyId ~ year:", year)
+  const leaves = await prisma.companyLeave.findMany({
+    where: { companyId, year },
+  });
+  console.log("🚀 ~ getLeavesByCompanyId ~ leaves:", leaves)
+  return leaves;
+};
+
+export const addLeave = async (companyId: string, input: AddLeaveInput, createdBy: string) => {
+  const leave = await prisma.companyLeave.create({
+    data: {
+      companyId,
+      ...input,
+      createdBy,
+      createdDate: new Date(),
+    },
+  });
+  return leave;
+};
+
+export const updateLeave = async (companyId: string, input: UpdateLeaveInput, modifiedBy: string) => {
+  const leave = await prisma.companyLeave.update({
+    where: { id: companyId },
+    data: {
+      ...input,
+      modifiedBy,
+      modifiedDate: new Date(),
+    },
+  });
+  return leave;
+};
+
+export const deleteLeave = async (companyId: string, input: UpdateLeaveInput, modifiedBy: string) => {
+  const leave = await prisma.companyLeave.update({
+    where: { id: companyId },
+    data: {
+      isDeleted: true,
+      modifiedBy,
+      modifiedDate: new Date(),
+    },
+  });
+  return leave;
+};
+
+export interface AddLeaveInput {
+  leaveName: string;
+  leaveDate: Date;
+  year: string;
+}
+
+export interface UpdateLeaveInput {
+  leaveName: string;
+  leaveDate: Date;
+  year: string;
+}
