@@ -249,7 +249,6 @@ export const updateEmployeeData = async (employeeData: Partial<EmployeeDetail>):
   });
 };
 
-
 export const updateClientData = async (clientData: Partial<ClientDetail>): Promise<ClientDetail> => {
   return await prisma.clientDetail.update({
     where: { id: clientData.id },
@@ -292,6 +291,8 @@ export const updateCompanyData = async (companyData: Partial<CompanyDetail>): Pr
       createdDate: companyData.createdDate!,
       modifiedBy: companyData.modifiedBy,
       modifiedDate: companyData.modifiedDate,
+      primaryColor: companyData.primaryColor,
+      secondaryColor: companyData.secondaryColor,
     },
   });
 };

@@ -1,7 +1,8 @@
 import express, { Router } from 'express';
 import authenticate from '../logs/middlewares/authMiddleware';
-import { getCompanyStatisticsController, updateCompanyController, getAllCompaniesController, getCompanyByCompanyIdController, changeCompanyStatusController, getCompanyByUserIDController, getLeavesByCompanyIdController, addLeaveController, updateLeaveController, deleteLeaveController } from '../controllers/companyController';
-import { updateCompanySchema, addLeaveSchema, updateLeaveSchema } from '../dtos/company.dto';
+import { getCompanyStatisticsController, updateCompanyController, getAllCompaniesController, getCompanyByCompanyIdController, changeCompanyStatusController, getCompanyByUserIDController, getLeavesByCompanyIdController, addLeaveController, updateLeaveController, deleteLeaveController, uploadCompanyLogoController, updateCompanyColorsController } from '../controllers/companyController';
+import { uploadBrandLogo } from '../middlewares/uploadMiddleware';
+import { updateCompanySchema, addLeaveSchema, updateLeaveSchema, updateCompanyColorsSchema } from '../dtos/company.dto';
 import validate from '../logs/middlewares/validateRequest';
 
 const router: Router = express.Router();
@@ -568,6 +569,9 @@ router.get("/:companyId", authenticate, getCompanyByCompanyIdController);
 // Update Company Route
 router.put("/:companyId", authenticate, validate(updateCompanySchema), updateCompanyController);
 
+// Update Company Route
+router.patch("/:companyId", authenticate, validate(updateCompanyColorsSchema), updateCompanyColorsController);
+
 // Change Company Status
 router.patch("/:companyId/status", authenticate, changeCompanyStatusController);
 
@@ -581,9 +585,12 @@ router.get("/:companyId/leaves/:year", authenticate, getLeavesByCompanyIdControl
 router.post("/:companyId/leaves", authenticate, validate(addLeaveSchema), addLeaveController);
 
 // Update Leave Route
-router.put("/:companyId/leaves", authenticate, validate(updateLeaveSchema), updateLeaveController);
+router.put("/:companyId/leaves/:leaveId", authenticate, validate(updateLeaveSchema), updateLeaveController);
 
 // Delete Leave Route
-router.delete("/:companyId/leaves", authenticate, deleteLeaveController);
+router.delete("/:companyId/leaves/:leaveId", authenticate, deleteLeaveController);
+
+// Upload Company Logo Route
+router.post("/:companyId/logo", authenticate, uploadBrandLogo, uploadCompanyLogoController);
 
 module.exports = router;

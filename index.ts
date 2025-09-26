@@ -31,7 +31,7 @@ if (!process.env.DOTENV_CONFIG_PATH) {
 const app = express();
 
 app.use(cors({
-  origin: String(process.env.CORS_ORIGIN || process.env.FRONTEND_URL || process.env.APP_URL || ''),
+  origin: String(process.env.FRONTEND_URL || ''),
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   credentials: true,
 }));

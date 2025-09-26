@@ -10,6 +10,8 @@ export interface UpdateCompanyDto {
   isActive?: boolean;
   website?: string;
   foundedYear?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
 }
 
 export const companyResponseSchema = Joi.object({
@@ -65,6 +67,8 @@ export const updateCompanySchema = Joi.object({
   isActive: Joi.boolean().required(),
   website: Joi.string().required(),
   foundedYear: Joi.string().required(),
+  primaryColor: Joi.string().required(),
+  secondaryColor: Joi.string().required(),
 }); 
 
 export const addLeaveSchema = Joi.object({
@@ -77,4 +81,9 @@ export const updateLeaveSchema = Joi.object({
   leaveName: Joi.string().required(),
   leaveDate: Joi.date().required(),
   year: Joi.string().required(),
+});
+
+export const updateCompanyColorsSchema = Joi.object({
+  primaryColor: Joi.string(),
+  secondaryColor: Joi.string(),
 });

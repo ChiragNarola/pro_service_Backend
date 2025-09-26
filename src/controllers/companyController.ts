@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { getCompanyStatistics, updateCompany, getAllCompanies, UpdateCompanyInput, getCompanyByCompanyId, changeCompanyStatus, getCompanyByUserID, getLeavesByCompanyId, addLeave, updateLeave, deleteLeave } from '../services/companyService';
+import { getCompanyStatistics, updateCompany, getAllCompanies, UpdateCompanyInput, getCompanyByCompanyId, changeCompanyStatus, getCompanyByUserID, getLeavesByCompanyId, addLeave, updateLeave, deleteLeave, updateCompanyLogo, updateCompanyColors } from '../services/companyService';
 import { successResponse, successResponseMessage, errorResponse } from '../utils/responseHelper';
 
 export const getCompanyStatisticsController = async (req: Request, res: Response) => {
@@ -124,8 +124,8 @@ export const addLeaveController = async (req: Request, res: Response) => {
 
 export const updateLeaveController = async (req: Request, res: Response) => {
   try {
-    const { companyId } = req.params;
-    const leave = await updateLeave(companyId, req.body, req.user?.id || 'system');
+    const { leaveId } = req.params;
+    const leave = await updateLeave(leaveId, req.body, req.user?.id || 'system');
     successResponse(res, leave, 200);
   } catch (error: any) {
     errorResponse(res, 'Error updating leave', 500);
@@ -134,10 +134,35 @@ export const updateLeaveController = async (req: Request, res: Response) => {
 
 export const deleteLeaveController = async (req: Request, res: Response) => {
   try {
-    const { companyId } = req.params;
-    const leave = await deleteLeave(companyId, req.body, req.user?.id || 'system');
+    const { leaveId } = req.params; 
+    const leave = await deleteLeave(leaveId, req.user?.id || 'system');
     successResponse(res, leave, 200);
   } catch (error: any) {
     errorResponse(res, 'Error deleting leave', 500);
+  }
+};
+
+export const uploadCompanyLogoController = async (req: Request, res: Response) => {
+  try {
+    const { companyId } = req.params;
+    const file = (req as any).file;
+    if (!file) {
+      return errorResponse(res, 'Logo file is required', 400);
+    }
+    const logoUrl = `/${file.path.replace(/\\/g, '/')}`;
+    const updated = await updateCompanyLogo(companyId, logoUrl, req.user?.id || 'system');
+    successResponse(res, updated, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error uploading company logo', 500);
+  }
+};
+
+export const updateCompanyColorsController = async (req: Request, res: Response) => {
+  try {
+    const { companyId } = req.params;
+    const colors = await updateCompanyColors(companyId, req.body, req.user?.id || 'system');
+    successResponse(res, colors, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error updating company colors', 500);
   }
 };

@@ -153,6 +153,9 @@ model CompanyDetail {
   isDeleted           Boolean             @default(false)
   foundedYear         String?             @db.VarChar(10)
   website             String?             @db.VarChar(100)
+  primaryColor        String?             @db.VarChar(20)
+  secondaryColor      String?             @db.VarChar(20)
+  companyLogoUrl      String?             @db.VarChar(1000)
   clientDetails       ClientDetail[]
   subscription        Subscription?       @relation(fields: [planId], references: [id])
   user                User?               @relation(fields: [userId], references: [id])

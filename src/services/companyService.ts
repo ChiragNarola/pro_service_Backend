@@ -17,6 +17,8 @@ export interface UpdateCompanyInput {
   modifiedBy: string;
   website?: string;
   foundedYear?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
 }
 
 export const changeCompanyStatus = async (companyId: string, isActive: boolean, modifiedBy: string) => {
@@ -142,6 +144,8 @@ export const updateCompany = async (id: string, input: UpdateCompanyInput): Prom
     createdDate: existingCompany.createdDate,
     modifiedBy: input.modifiedBy,
     modifiedDate: new Date(),
+    primaryColor: input.primaryColor || existingCompany.primaryColor,
+    secondaryColor: input.secondaryColor || existingCompany.secondaryColor,
   });
 
   const updatedCompanyData = await prisma.companyDetail.findFirst({
@@ -280,11 +284,9 @@ export const getCompanyByUserID = async (userId: string) => {
 };
 
 export const getLeavesByCompanyId = async (companyId: string, year: string) => {
-  console.log("🚀 ~ getLeavesByCompanyId ~ year:", year)
   const leaves = await prisma.companyLeave.findMany({
     where: { companyId, year },
   });
-  console.log("🚀 ~ getLeavesByCompanyId ~ leaves:", leaves)
   return leaves;
 };
 
@@ -300,9 +302,9 @@ export const addLeave = async (companyId: string, input: AddLeaveInput, createdB
   return leave;
 };
 
-export const updateLeave = async (companyId: string, input: UpdateLeaveInput, modifiedBy: string) => {
+export const updateLeave = async (leaveId: string, input: UpdateLeaveInput, modifiedBy: string) => {
   const leave = await prisma.companyLeave.update({
-    where: { id: companyId },
+    where: { id: leaveId },
     data: {
       ...input,
       modifiedBy,
@@ -312,9 +314,9 @@ export const updateLeave = async (companyId: string, input: UpdateLeaveInput, mo
   return leave;
 };
 
-export const deleteLeave = async (companyId: string, input: UpdateLeaveInput, modifiedBy: string) => {
+export const deleteLeave = async (leaveId: string, modifiedBy: string) => {
   const leave = await prisma.companyLeave.update({
-    where: { id: companyId },
+    where: { id: leaveId },
     data: {
       isDeleted: true,
       modifiedBy,
@@ -334,4 +336,56 @@ export interface UpdateLeaveInput {
   leaveName: string;
   leaveDate: Date;
   year: string;
+}
+
+export const updateCompanyLogo = async (companyId: string, logoUrl: string, modifiedBy: string) => {
+  const existingCompany = await prisma.companyDetail.findUnique({ where: { id: companyId } });
+  if (!existingCompany) {
+    throw new Error('Company not found');
+  }
+
+  const updated = await prisma.companyDetail.update({
+    where: { id: companyId },
+    data: {
+      companyLogoUrl: logoUrl,
+      modifiedBy,
+      modifiedDate: new Date(),
+    },
+    include: {
+      subscription: true,
+      user: {
+        select: { id: true, name: true, lastName: true, email: true, status: true }
+      },
+    }
+  });
+
+  return updated;
+};
+
+export const updateCompanyColors = async (companyId: string, colors: UpdateCompanyColorsInput, modifiedBy: string) => {
+  const existingCompany = await prisma.companyDetail.findUnique({ where: { id: companyId } });
+  if (!existingCompany) {
+    throw new Error('Company not found');
+  }
+  const updated = await prisma.companyDetail.update({
+    where: { id: companyId },
+    data: {
+      primaryColor: colors.primaryColor || existingCompany.primaryColor,
+      secondaryColor: colors.secondaryColor || existingCompany.secondaryColor,
+      modifiedBy,
+      modifiedDate: new Date(),
+    },
+    include: {
+      subscription: true,
+      user: {
+        select: { id: true, name: true, lastName: true, email: true, status: true }
+      },
+    }
+  });
+  return updated;
+};
+
+export interface UpdateCompanyColorsInput {
+  primaryColor?: string;
+  secondaryColor?: string;
 }
