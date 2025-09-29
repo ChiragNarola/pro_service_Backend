@@ -126,3 +126,22 @@ export const updatePositionSchema = Joi.object({
   jobResponsibilities: Joi.string().required(),
   technicalSkills: Joi.string().required(),
 });
+
+// ================= Invoice Template Schemas =================
+export const addInvoiceTemplateSchema = Joi.object({
+  companyId: Joi.string().required(),
+  name: Joi.string().max(150).required(),
+  description: Joi.string().allow(null, ''),
+  isDefault: Joi.boolean().default(false),
+  status: Joi.string().valid('active', 'inactive').default('active'),
+  templateHtml: Joi.string().allow(null, ''),
+});
+
+export const updateInvoiceTemplateSchema = Joi.object({
+  templateId: Joi.string(),
+  name: Joi.string().max(150),
+  description: Joi.string().allow(null, ''),
+  isDefault: Joi.boolean(),
+  status: Joi.string().valid('active', 'inactive'),
+  templateHtml: Joi.string().allow(null, ''),
+});

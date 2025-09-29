@@ -1,8 +1,8 @@
 import express, { Router } from 'express';
 import authenticate from '../logs/middlewares/authMiddleware';
-import { getCompanyStatisticsController, updateCompanyController, getAllCompaniesController, getCompanyByCompanyIdController, changeCompanyStatusController, getCompanyByUserIDController, getLeavesByCompanyIdController, addLeaveController, updateLeaveController, deleteLeaveController, uploadCompanyLogoController, updateCompanyColorsController, addDepartmentController, updateDepartmentController, deleteDepartmentController, getAllDepartmentsController, getDepartmentByIdController, getPositionByCompanyIdController, getPositionByIdController, deletePositionController, addPositionController, updatePositionController } from '../controllers/companyController';
+import { getCompanyStatisticsController, updateCompanyController, getAllCompaniesController, getCompanyByCompanyIdController, changeCompanyStatusController, getCompanyByUserIDController, getLeavesByCompanyIdController, addLeaveController, updateLeaveController, deleteLeaveController, uploadCompanyLogoController, updateCompanyColorsController, addDepartmentController, updateDepartmentController, deleteDepartmentController, getAllDepartmentsController, getDepartmentByIdController, getPositionByCompanyIdController, getPositionByIdController, deletePositionController, addPositionController, updatePositionController, listNotificationRulesController, getNotificationRuleByIdController, addNotificationRuleController, updateNotificationRuleController, deleteNotificationRuleController, listInvoiceTemplatesController, getInvoiceTemplateByIdController, addInvoiceTemplateController, updateInvoiceTemplateController, deleteInvoiceTemplateController } from '../controllers/companyController';
 import { uploadBrandLogo } from '../middlewares/uploadMiddleware';
-import { updateCompanySchema, addLeaveSchema, updateLeaveSchema, updateCompanyColorsSchema, addDepartmentSchema, updateDepartmentSchema, addPositionSchema, updatePositionSchema } from '../dtos/company.dto';
+import { updateCompanySchema, addLeaveSchema, updateLeaveSchema, updateCompanyColorsSchema, addDepartmentSchema, updateDepartmentSchema, addPositionSchema, updatePositionSchema, addInvoiceTemplateSchema, updateInvoiceTemplateSchema } from '../dtos/company.dto';
 import validate from '../logs/middlewares/validateRequest';
 
 const router: Router = express.Router();
@@ -750,5 +750,26 @@ router.post("/:companyId/positions", authenticate, validate(addPositionSchema), 
 
 router.put("/:companyId/positions/:positionId", authenticate, validate(updatePositionSchema), updatePositionController);
 
+// Notification Rules CRUD
+router.get('/:companyId/notifications', authenticate, listNotificationRulesController);
+
+router.get('/:companyId/notifications/:ruleId', authenticate, getNotificationRuleByIdController);
+
+router.post('/:companyId/notifications', authenticate, addNotificationRuleController);
+
+router.put('/:companyId/notifications/:ruleId', authenticate, updateNotificationRuleController);
+
+router.delete('/:companyId/notifications/:ruleId', authenticate, deleteNotificationRuleController);
+
+// Invoice Templates CRUD
+router.get('/:companyId/invoice-templates', authenticate, listInvoiceTemplatesController);
+
+router.get('/:companyId/invoice-templates/:templateId', authenticate, getInvoiceTemplateByIdController);
+
+router.post('/:companyId/invoice-templates', authenticate, validate(addInvoiceTemplateSchema), addInvoiceTemplateController);
+
+router.put('/:companyId/invoice-templates/:templateId', authenticate, validate(updateInvoiceTemplateSchema), updateInvoiceTemplateController);
+
+router.delete('/:companyId/invoice-templates/:templateId', authenticate, deleteInvoiceTemplateController);
 
 module.exports = router;

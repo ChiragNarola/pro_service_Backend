@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { getCompanyStatistics, updateCompany, getAllCompanies, UpdateCompanyInput, getCompanyByCompanyId, changeCompanyStatus, getCompanyByUserID, getLeavesByCompanyId, addLeave, updateLeave, deleteLeave, updateCompanyLogo, updateCompanyColors, addDepartment, updateDepartment, deleteDepartment, getAllDepartments, getDepartmentById, addPosition, updatePosition, deletePosition, getPositionByCompanyId, getPositionById } from '../services/companyService';
+import { getCompanyStatistics, updateCompany, getAllCompanies, UpdateCompanyInput, getCompanyByCompanyId, changeCompanyStatus, getCompanyByUserID, getLeavesByCompanyId, addLeave, updateLeave, deleteLeave, updateCompanyLogo, updateCompanyColors, addDepartment, updateDepartment, deleteDepartment, getAllDepartments, getDepartmentById, addPosition, updatePosition, deletePosition, getPositionByCompanyId, getPositionById, createCompanyNotificationRule, updateCompanyNotificationRule, deleteCompanyNotificationRule, getCompanyNotificationRuleById, listCompanyNotificationRules, createInvoiceTemplate, updateInvoiceTemplate, deleteInvoiceTemplate, getInvoiceTemplateById, listInvoiceTemplates } from '../services/companyService';
 import { successResponse, errorResponse } from '../utils/responseHelper';
 
 export const getCompanyStatisticsController = async (req: Request, res: Response) => {
@@ -134,7 +134,7 @@ export const updateLeaveController = async (req: Request, res: Response) => {
 
 export const deleteLeaveController = async (req: Request, res: Response) => {
   try {
-    const { leaveId } = req.params; 
+    const { leaveId } = req.params;
     const leave = await deleteLeave(leaveId, req.user?.id || 'system');
     successResponse(res, leave, 200);
   } catch (error: any) {
@@ -188,7 +188,7 @@ export const updateDepartmentController = async (req: Request, res: Response) =>
   }
 };
 
-export const deleteDepartmentController = async (req: Request, res: Response) => {    
+export const deleteDepartmentController = async (req: Request, res: Response) => {
   try {
     const { departmentId } = req.params;
     const department = await deleteDepartment(departmentId, req.user?.id || 'system');
@@ -198,7 +198,7 @@ export const deleteDepartmentController = async (req: Request, res: Response) =>
   }
 };
 
-export const getAllDepartmentsController = async (req: Request, res: Response) => {   
+export const getAllDepartmentsController = async (req: Request, res: Response) => {
   try {
     const { companyId } = req.params;
     const page = parseInt((req.query.page as string) || '1');
@@ -254,19 +254,19 @@ export const getPositionByCompanyIdController = async (req: Request, res: Respon
   try {
     const { companyId } = req.params;
     const { page = 1, limit = 10 } = req.query;
-    
+
     // Validate pagination parameters
     const pageNum = parseInt(page as string, 10);
     const limitNum = parseInt(limit as string, 10);
-    
+
     if (pageNum < 1) {
       return errorResponse(res, 'Page number must be greater than 0', 400);
     }
-    
+
     if (limitNum < 1 || limitNum > 100) {
       return errorResponse(res, 'Limit must be between 1 and 100', 400);
     }
-    
+
     const result = await getPositionByCompanyId(companyId, pageNum, limitNum);
     successResponse(res, result, 200);
   } catch (error: any) {
@@ -281,5 +281,109 @@ export const getPositionByIdController = async (req: Request, res: Response) => 
     successResponse(res, position, 200);
   } catch (error: any) {
     errorResponse(res, 'Error retrieving position by ID', 500);
+  }
+};
+
+// ================= Notification Rule Controllers =================
+export const listNotificationRulesController = async (req: Request, res: Response) => {
+  try {
+    const { companyId } = req.params;
+    const items = await listCompanyNotificationRules(companyId);
+    successResponse(res, items, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error listing notification rules', 500);
+  }
+};
+
+export const getNotificationRuleByIdController = async (req: Request, res: Response) => {
+  try {
+    const { ruleId } = req.params;
+    const item = await getCompanyNotificationRuleById(ruleId);
+    successResponse(res, item, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error retrieving notification rule', 500);
+  }
+};
+
+export const addNotificationRuleController = async (req: Request, res: Response) => {
+  try {
+    const { companyId } = req.params;
+    const created = await createCompanyNotificationRule(companyId, req.body, req.user?.id || 'system');
+    successResponse(res, created, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error creating notification rule', 500);
+  }
+};
+
+export const updateNotificationRuleController = async (req: Request, res: Response) => {
+  try {
+    const { ruleId } = req.params;
+    const updated = await updateCompanyNotificationRule(ruleId, req.body, req.user?.id || 'system');
+    successResponse(res, updated, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error updating notification rule', 500);
+  }
+};
+
+export const deleteNotificationRuleController = async (req: Request, res: Response) => {
+  try {
+    const { ruleId } = req.params;
+    const deleted = await deleteCompanyNotificationRule(ruleId, req.user?.id || 'system');
+    successResponse(res, deleted, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error deleting notification rule', 500);
+  }
+};
+
+// ================= Invoice Template Controllers =================
+export const listInvoiceTemplatesController = async (req: Request, res: Response) => {
+  try {
+    const { companyId } = req.params;
+    const page = parseInt((req.query.page as string) || '1', 10);
+    const limit = parseInt((req.query.limit as string) || '10', 10);
+    const result = await listInvoiceTemplates(companyId, page, limit);
+    successResponse(res, result, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error listing invoice templates', 500);
+  }
+};
+
+export const getInvoiceTemplateByIdController = async (req: Request, res: Response) => {
+  try {
+    const { templateId } = req.params;
+    const item = await getInvoiceTemplateById(templateId);
+    successResponse(res, item, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error retrieving invoice template', 500);
+  }
+};
+
+export const addInvoiceTemplateController = async (req: Request, res: Response) => {
+  try {
+    const { companyId } = req.params;
+    const created = await createInvoiceTemplate(companyId, req.body, req.user?.id || 'system');
+    successResponse(res, created, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error creating invoice template', 500);
+  }
+};
+
+export const updateInvoiceTemplateController = async (req: Request, res: Response) => {
+  try {
+    const { templateId } = req.params;
+    const updated = await updateInvoiceTemplate(templateId, req.body, req.user?.id || 'system');
+    successResponse(res, updated, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error updating invoice template', 500);
+  }
+};
+
+export const deleteInvoiceTemplateController = async (req: Request, res: Response) => {
+  try {
+    const { templateId } = req.params;
+    const deleted = await deleteInvoiceTemplate(templateId, req.user?.id || 'system');
+    successResponse(res, deleted, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error deleting invoice template', 500);
   }
 };

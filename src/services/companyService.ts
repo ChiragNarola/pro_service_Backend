@@ -550,7 +550,7 @@ export const deletePosition = async (positionId: string, modifiedBy: string) => 
 
 export const getPositionByCompanyId = async (companyId: string, page: number = 1, limit: number = 10) => {
   const skip = (page - 1) * limit;
-  
+
   const positions = await prisma.companyPosition.findMany({
     where: { companyId, isDeleted: false },
     include: {
@@ -592,4 +592,159 @@ export const getPositionById = async (positionId: string) => {
     where: { id: positionId, isDeleted: false },
   });
   return position;
-} 
+}
+
+// ================= Notification Rules (Company) =================
+export type CreateNotificationRuleInput = {
+  name: string;
+  description?: string | null;
+  eventKey: 'JobAssigned' | 'InvoiceDue' | 'PaymentReceived' | 'JobCompleted';
+  isActive?: boolean;
+  channels?: Array<'Email' | 'SMS' | 'Push'>;
+  recipients?: Array<'assigned_employee' | 'manager' | 'client' | 'accounting'>;
+};
+
+export const createCompanyNotificationRule = async (
+  companyId: string,
+  input: CreateNotificationRuleInput,
+  createdBy: string,
+) => {
+  const rule = await prisma.companyNotificationRule.create({
+    data: {
+      company: { connect: { id: companyId } },
+      name: input.name,
+      description: input.description ?? null,
+      isActive: input.isActive ?? true,
+      createdBy,
+      channels: {
+        create: (input.channels ?? ['Email']).map((t) => ({ type: t as any, isEnabled: true, createdBy })),
+      },
+      recipients: {
+        create: (input.recipients ?? ['assigned_employee']).map((r) => ({ type: r as any, createdBy })),
+      },
+    },
+    include: { channels: true, recipients: true },
+  });
+  return rule;
+};
+
+export type UpdateNotificationRuleInput = Partial<CreateNotificationRuleInput> & { id: string };
+
+export const updateCompanyNotificationRule = async (ruleId: string, input: UpdateNotificationRuleInput, modifiedBy: string,) => {
+  const updated = await prisma.companyNotificationRule.update({
+    where: { id: ruleId, isDeleted: false },
+    data: {
+      name: input.name,
+      description: input.description,
+      isActive: input.isActive,
+      modifiedBy,
+      modifiedDate: new Date(),
+      // replace channels/recipients if provided
+      ...(input.channels
+        ? { channels: { deleteMany: {}, create: input.channels.map((t) => ({ type: t as any, isEnabled: true, createdBy: modifiedBy })) } }
+        : {}),
+      ...(input.recipients
+        ? { recipients: { deleteMany: {}, create: input.recipients.map((r) => ({ type: r as any, createdBy: modifiedBy })) } }
+        : {}),
+    },
+    include: { channels: true, recipients: true },
+  });
+  return updated;
+};
+
+export const deleteCompanyNotificationRule = async (ruleId: string, modifiedBy: string) => {
+  const deleted = await prisma.companyNotificationRule.update({
+    where: { id: ruleId, isDeleted: false },
+    data: { isDeleted: true, modifiedBy, modifiedDate: new Date() },
+  });
+  return deleted;
+};
+
+export const getCompanyNotificationRuleById = async (ruleId: string) => {
+  return prisma.companyNotificationRule.findUnique({
+    where: { id: ruleId, isDeleted: false },
+    include: { channels: true, recipients: true },
+  });
+};
+
+export const listCompanyNotificationRules = async (companyId: string) => {
+  return prisma.companyNotificationRule.findMany({
+    where: { companyId, isDeleted: false },
+    orderBy: { createdDate: 'desc' },
+    include: { channels: true, recipients: true },
+  });
+};
+
+// ================= Invoice Templates =================
+export type InvoiceTemplateCreateInput = {
+  name: string;
+  description?: string | null;
+  isDefault?: boolean;
+  status?: 'active' | 'inactive';
+  templateHtml?: string | null;
+};
+
+export type InvoiceTemplateUpdateInput = Partial<InvoiceTemplateCreateInput>;
+
+export const createInvoiceTemplate = async (companyId: string, input: InvoiceTemplateCreateInput, createdBy: string) => {
+  const created = await prisma.companyInvoiceTemplate.create({
+    data: {
+      company: { connect: { id: companyId } },
+      name: input.name,
+      description: input.description ?? null,
+      isDefault: input.isDefault ?? false,
+      status: input.status ?? 'active',
+      templateHtml: input.templateHtml ?? null,
+      createdBy,
+    }
+  });
+  return created;
+};
+
+export const updateInvoiceTemplate = async (templateId: string, input: InvoiceTemplateUpdateInput, modifiedBy: string) => {
+  const updated = await prisma.companyInvoiceTemplate.update({
+    where: { id: templateId, isDeleted: false },
+    data: {
+      name: input.name,
+      description: input.description,
+      isDefault: input.isDefault,
+      status: input.status,
+      templateHtml: input.templateHtml,
+      modifiedBy,
+      modifiedDate: new Date()
+    }
+  });
+  return updated;
+};
+
+export const deleteInvoiceTemplate = async (templateId: string, modifiedBy: string) => {
+  const deleted = await prisma.companyInvoiceTemplate.update({
+    where: { id: templateId, isDeleted: false },
+    data: { isDeleted: true, modifiedBy, modifiedDate: new Date() }
+  });
+  return deleted;
+};
+
+export const getInvoiceTemplateById = async (templateId: string) => {
+  return prisma.companyInvoiceTemplate.findUnique({ where: { id: templateId, isDeleted: false } });
+};
+
+export const listInvoiceTemplates = async (companyId: string, page: number = 1, limit: number = 10) => {
+  const skip = (page - 1) * limit;
+  const where = { companyId, isDeleted: false } as const;
+  const [items, totalCount] = await Promise.all([
+    prisma.companyInvoiceTemplate.findMany({ where, skip, take: limit, orderBy: { createdDate: 'desc' } }),
+    prisma.companyInvoiceTemplate.count({ where })
+  ]);
+  return {
+    items,
+    pagination: {
+      page,
+      limit,
+      totalCount,
+      totalPages: Math.ceil(totalCount / limit),
+      hasNextPage: page < Math.ceil(totalCount / limit),
+      hasPrevPage: page > 1,
+    }
+  };
+};
