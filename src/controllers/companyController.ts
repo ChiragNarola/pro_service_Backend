@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { getCompanyStatistics, updateCompany, getAllCompanies, UpdateCompanyInput, getCompanyByCompanyId, changeCompanyStatus, getCompanyByUserID, getLeavesByCompanyId, addLeave, updateLeave, deleteLeave, updateCompanyLogo, updateCompanyColors } from '../services/companyService';
-import { successResponse, successResponseMessage, errorResponse } from '../utils/responseHelper';
+import { getCompanyStatistics, updateCompany, getAllCompanies, UpdateCompanyInput, getCompanyByCompanyId, changeCompanyStatus, getCompanyByUserID, getLeavesByCompanyId, addLeave, updateLeave, deleteLeave, updateCompanyLogo, updateCompanyColors, addDepartment, updateDepartment, deleteDepartment, getAllDepartments, getDepartmentById, addPosition, updatePosition, deletePosition, getPositionByCompanyId, getPositionById } from '../services/companyService';
+import { successResponse, errorResponse } from '../utils/responseHelper';
 
 export const getCompanyStatisticsController = async (req: Request, res: Response) => {
   try {
@@ -164,5 +164,122 @@ export const updateCompanyColorsController = async (req: Request, res: Response)
     successResponse(res, colors, 200);
   } catch (error: any) {
     errorResponse(res, 'Error updating company colors', 500);
+  }
+};
+
+//Department Controller
+export const addDepartmentController = async (req: Request, res: Response) => {
+  try {
+    const { companyId } = req.params;
+    const department = await addDepartment(companyId, req.body, req.user?.id || 'system');
+    successResponse(res, department, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error adding department', 500);
+  }
+};
+
+export const updateDepartmentController = async (req: Request, res: Response) => {
+  try {
+    const { departmentId } = req.params;
+    const department = await updateDepartment(departmentId, req.body, req.user?.id || 'system');
+    successResponse(res, department, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error updating department', 500);
+  }
+};
+
+export const deleteDepartmentController = async (req: Request, res: Response) => {    
+  try {
+    const { departmentId } = req.params;
+    const department = await deleteDepartment(departmentId, req.user?.id || 'system');
+    successResponse(res, department, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error deleting department', 500);
+  }
+};
+
+export const getAllDepartmentsController = async (req: Request, res: Response) => {   
+  try {
+    const { companyId } = req.params;
+    const page = parseInt((req.query.page as string) || '1');
+    const limit = parseInt((req.query.limit as string) || '10');
+    const result = await getAllDepartments(companyId, page, limit);
+    successResponse(res, result, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error retrieving all departments', 500);
+  }
+};
+
+export const getDepartmentByIdController = async (req: Request, res: Response) => {
+  try {
+    const { departmentId } = req.params;
+    const department = await getDepartmentById(departmentId);
+  } catch (error: any) {
+    errorResponse(res, 'Error retrieving department by ID', 500);
+  }
+};
+
+//Position Controller
+export const addPositionController = async (req: Request, res: Response) => {
+  try {
+    const { companyId } = req.params;
+    const position = await addPosition(companyId, req.body, req.user?.id || 'system');
+    successResponse(res, position, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error adding position', 500);
+  }
+};
+
+export const updatePositionController = async (req: Request, res: Response) => {
+  try {
+    const { positionId } = req.params;
+    const position = await updatePosition(positionId, req.body, req.user?.id || 'system');
+    successResponse(res, position, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error updating position', 500);
+  }
+};
+
+export const deletePositionController = async (req: Request, res: Response) => {
+  try {
+    const { positionId } = req.params;
+    const position = await deletePosition(positionId, req.user?.id || 'system');
+    successResponse(res, position, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error deleting position', 500);
+  }
+};
+
+export const getPositionByCompanyIdController = async (req: Request, res: Response) => {
+  try {
+    const { companyId } = req.params;
+    const { page = 1, limit = 10 } = req.query;
+    
+    // Validate pagination parameters
+    const pageNum = parseInt(page as string, 10);
+    const limitNum = parseInt(limit as string, 10);
+    
+    if (pageNum < 1) {
+      return errorResponse(res, 'Page number must be greater than 0', 400);
+    }
+    
+    if (limitNum < 1 || limitNum > 100) {
+      return errorResponse(res, 'Limit must be between 1 and 100', 400);
+    }
+    
+    const result = await getPositionByCompanyId(companyId, pageNum, limitNum);
+    successResponse(res, result, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error retrieving positions by company ID', 500);
+  }
+};
+
+export const getPositionByIdController = async (req: Request, res: Response) => {
+  try {
+    const { positionId } = req.params;
+    const position = await getPositionById(positionId);
+    successResponse(res, position, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error retrieving position by ID', 500);
   }
 };

@@ -389,3 +389,207 @@ export interface UpdateCompanyColorsInput {
   primaryColor?: string;
   secondaryColor?: string;
 }
+
+export const addDepartment = async (companyId: string, input: AddDepartmentInput, createdBy: string) => {
+  const department = await prisma.companyDepartment.create({
+    data: {
+      companyId,
+      ...input,
+      createdBy,
+      createdDate: new Date(),
+    },
+  });
+  return department;
+};
+
+export interface AddDepartmentInput {
+  department: string;
+  status: boolean;
+}
+
+export const updateDepartment = async (departmentId: string, input: UpdateDepartmentInput, modifiedBy: string) => {
+  const department = await prisma.companyDepartment.update({
+    where: { id: departmentId },
+    data: {
+      ...input,
+      modifiedBy,
+      modifiedDate: new Date(),
+    },
+  });
+  return department;
+};
+
+export interface UpdateDepartmentInput {
+  department: string;
+  status: boolean;
+}
+
+export const deleteDepartment = async (departmentId: string, modifiedBy: string) => {
+  const department = await prisma.companyDepartment.update({
+    where: { id: departmentId },
+    data: {
+      isDeleted: true,
+      modifiedBy,
+      modifiedDate: new Date(),
+    },
+  });
+  return department;
+};
+
+export const getAllDepartments = async (companyId: string, page: number = 1, limit: number = 5) => {
+  const skip = (page - 1) * limit;
+
+  const where = { companyId: companyId, isDeleted: false } as const;
+
+  const [departments, totalCount] = await Promise.all([
+    prisma.companyDepartment.findMany({ where, skip, take: limit, orderBy: { createdDate: 'desc' } }),
+    prisma.companyDepartment.count({ where })
+  ]);
+
+  return {
+    items: departments,
+    pagination: {
+      page,
+      limit,
+      totalCount,
+      totalPages: Math.ceil(totalCount / limit),
+      hasNextPage: page < Math.ceil(totalCount / limit),
+      hasPrevPage: page > 1,
+    },
+  };
+};
+
+export const getDepartmentById = async (departmentId: string) => {
+  const department = await prisma.companyDepartment.findUnique({
+    where: { id: departmentId, isDeleted: false },
+  });
+  return department;
+};
+
+export const addPosition = async (companyId: string, input: AddPositionInput, createdBy: string) => {
+  const position = await prisma.companyPosition.create({
+    data: {
+      company: { connect: { id: companyId } },
+      ...(input.departmentId
+        ? { department: { connect: { id: input.departmentId } } }
+        : {}),
+      title: input.title,
+      level: input.level,
+      description: input.description,
+      salaryMin: input.salaryMin ? Number(input.salaryMin) : null,
+      salaryMax: input.salaryMax ? Number(input.salaryMax) : null,
+      jobRequirements: input.jobRequirements,
+      jobResponsibilities: input.jobResponsibilities,
+      technicalSkills: input.technicalSkills,
+      createdBy,
+      createdDate: new Date(),
+    },
+  });
+  return position;
+};
+
+export interface AddPositionInput {
+  departmentId: string | null | undefined;
+  title: string;
+  level: string;
+  description: string;
+  salaryMin: string;
+  salaryMax: string;
+  jobRequirements: string;
+  jobResponsibilities: string;
+  technicalSkills: string;
+}
+
+export const updatePosition = async (positionId: string, input: UpdatePositionInput, modifiedBy: string) => {
+  const position = await prisma.companyPosition.update({
+    where: { id: positionId, isDeleted: false },
+    data: {
+      title: input.title,
+      level: input.level,
+      description: input.description,
+      salaryMin: input.salaryMin ? Number(input.salaryMin) : null,
+      salaryMax: input.salaryMax ? Number(input.salaryMax) : null,
+      jobRequirements: input.jobRequirements,
+      jobResponsibilities: input.jobResponsibilities,
+      technicalSkills: input.technicalSkills,
+      ...(input.departmentId !== undefined
+        ? input.departmentId
+          ? { department: { connect: { id: input.departmentId } } }
+          : { department: { disconnect: true } }
+        : {}),
+      modifiedBy,
+      modifiedDate: new Date(),
+    },
+  });
+  return position;
+}
+
+export interface UpdatePositionInput {
+  departmentId: string | null | undefined;
+  title: string;
+  level: string;
+  description: string;
+  salaryMin: string;
+  salaryMax: string;
+  jobRequirements: string;
+  jobResponsibilities: string;
+  technicalSkills: string;
+}
+
+export const deletePosition = async (positionId: string, modifiedBy: string) => {
+  const position = await prisma.companyPosition.update({
+    where: { id: positionId, isDeleted: false },
+    data: {
+      isDeleted: true,
+      modifiedBy,
+      modifiedDate: new Date(),
+    },
+  });
+  return position;
+}
+
+export const getPositionByCompanyId = async (companyId: string, page: number = 1, limit: number = 10) => {
+  const skip = (page - 1) * limit;
+  
+  const positions = await prisma.companyPosition.findMany({
+    where: { companyId, isDeleted: false },
+    include: {
+      department: {
+        select: {
+          id: true,
+          department: true,
+          status: true,
+        }
+      }
+    },
+    skip,
+    take: limit,
+    orderBy: {
+      createdDate: 'desc'
+    },
+  });
+  console.log("🚀 ~ getPositionByCompanyId ~ positions:", positions)
+
+  const totalCount = await prisma.companyPosition.count({
+    where: { companyId, isDeleted: false },
+  });
+
+  return {
+    items: positions,
+    pagination: {
+      page,
+      limit,
+      totalCount,
+      totalPages: Math.ceil(totalCount / limit),
+      hasNextPage: page < Math.ceil(totalCount / limit),
+      hasPrevPage: page > 1,
+    }
+  };
+}
+
+export const getPositionById = async (positionId: string) => {
+  const position = await prisma.companyPosition.findUnique({
+    where: { id: positionId, isDeleted: false },
+  });
+  return position;
+} 

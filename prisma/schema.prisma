@@ -162,6 +162,8 @@ model CompanyDetail {
   planDetails         CompanyPlanDetail[]
   employeeDetail      EmployeeDetail[]
   companyLeaves       CompanyLeave[]
+  companyDepartments  CompanyDepartment[]
+  companyPositions    CompanyPosition[]
 
   @@index([planId])
   @@index([createdBy])
@@ -356,6 +358,58 @@ model ClientService {
   @@index([clientId])
   @@index([serviceId])
   @@index([status])
+  @@index([createdBy])
+  @@index([modifiedBy])
+  @@index([deletedBy])
+}
+
+model CompanyDepartment {
+  id           String         @id @default(uuid()) @db.Uuid
+  companyId    String         @db.Uuid
+  department   String         @db.VarChar(100)
+  status       Boolean        @default(true)
+  createdBy    String         @db.VarChar(100)
+  createdDate  DateTime       @default(now())
+  modifiedBy   String?        @db.VarChar(100)
+  modifiedDate DateTime?
+  deletedBy    String?        @db.VarChar(100)
+  deletedDate  DateTime?
+  isDeleted    Boolean        @default(false)
+  company      CompanyDetail  @relation(fields: [companyId], references: [id])
+  positions    CompanyPosition[]
+
+  @@unique([companyId, department])
+  @@index([companyId])
+  @@index([status])
+  @@index([createdBy])
+  @@index([modifiedBy])
+  @@index([deletedBy])
+}
+
+model CompanyPosition {
+  id                      String              @id @default(uuid()) @db.Uuid
+  companyId               String              @db.Uuid
+  departmentId            String?             @db.Uuid
+  title                   String              @db.VarChar(150)
+  level                   String?             @db.VarChar(50)
+  description             String?             @db.VarChar(1000)
+  salaryMin               Int?
+  salaryMax               Int?
+  jobRequirements         String?             @db.VarChar(1000)
+  jobResponsibilities     String?             @db.VarChar(1000)
+  technicalSkills        String?             @db.VarChar(1000)
+  createdBy               String              @db.VarChar(100)
+  createdDate             DateTime            @default(now())
+  modifiedBy              String?             @db.VarChar(100)
+  modifiedDate            DateTime?
+  deletedBy               String?             @db.VarChar(100)
+  deletedDate             DateTime?
+  isDeleted               Boolean             @default(false)
+  company                 CompanyDetail       @relation(fields: [companyId], references: [id])
+  department              CompanyDepartment?  @relation(fields: [departmentId], references: [id])
+
+  @@index([companyId])
+  @@index([departmentId])
   @@index([createdBy])
   @@index([modifiedBy])
   @@index([deletedBy])

@@ -87,3 +87,42 @@ export const updateCompanyColorsSchema = Joi.object({
   primaryColor: Joi.string(),
   secondaryColor: Joi.string(),
 });
+
+export const addDepartmentSchema = Joi.object({
+  companyId: Joi.string().required(),
+  department: Joi.string().required(),
+  status: Joi.boolean().required()
+});
+
+export const updateDepartmentSchema = Joi.object({
+  companyId: Joi.string().required(),
+  department: Joi.string().required(),
+  status: Joi.boolean().required()
+});
+
+export const addPositionSchema = Joi.object({
+  companyId: Joi.string().required(),
+  departmentId: Joi.string().required(),
+  title: Joi.string().required(),
+  level: Joi.string().required(),
+  description: Joi.string().required(),
+  salaryMin: Joi.string().required(),
+  salaryMax: Joi.string().required(),
+  jobRequirements: Joi.string().required(),
+  jobResponsibilities: Joi.string().required(),
+  technicalSkills: Joi.string().required(),
+});
+
+export const updatePositionSchema = Joi.object({
+  id: Joi.string().required(),
+  companyId: Joi.string().required(),
+  departmentId: Joi.string().required(),
+  title: Joi.string().required(),
+  level: Joi.string().required(),
+  description: Joi.string().required(),
+  salaryMin: Joi.string().required(),
+  salaryMax: Joi.string().required(),
+  jobRequirements: Joi.string().required(),
+  jobResponsibilities: Joi.string().required(),
+  technicalSkills: Joi.string().required(),
+});

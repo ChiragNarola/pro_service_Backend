@@ -1,8 +1,8 @@
 import express, { Router } from 'express';
 import authenticate from '../logs/middlewares/authMiddleware';
-import { getCompanyStatisticsController, updateCompanyController, getAllCompaniesController, getCompanyByCompanyIdController, changeCompanyStatusController, getCompanyByUserIDController, getLeavesByCompanyIdController, addLeaveController, updateLeaveController, deleteLeaveController, uploadCompanyLogoController, updateCompanyColorsController } from '../controllers/companyController';
+import { getCompanyStatisticsController, updateCompanyController, getAllCompaniesController, getCompanyByCompanyIdController, changeCompanyStatusController, getCompanyByUserIDController, getLeavesByCompanyIdController, addLeaveController, updateLeaveController, deleteLeaveController, uploadCompanyLogoController, updateCompanyColorsController, addDepartmentController, updateDepartmentController, deleteDepartmentController, getAllDepartmentsController, getDepartmentByIdController, getPositionByCompanyIdController, getPositionByIdController, deletePositionController, addPositionController, updatePositionController } from '../controllers/companyController';
 import { uploadBrandLogo } from '../middlewares/uploadMiddleware';
-import { updateCompanySchema, addLeaveSchema, updateLeaveSchema, updateCompanyColorsSchema } from '../dtos/company.dto';
+import { updateCompanySchema, addLeaveSchema, updateLeaveSchema, updateCompanyColorsSchema, addDepartmentSchema, updateDepartmentSchema, addPositionSchema, updatePositionSchema } from '../dtos/company.dto';
 import validate from '../logs/middlewares/validateRequest';
 
 const router: Router = express.Router();
@@ -592,5 +592,163 @@ router.delete("/:companyId/leaves/:leaveId", authenticate, deleteLeaveController
 
 // Upload Company Logo Route
 router.post("/:companyId/logo", authenticate, uploadBrandLogo, uploadCompanyLogoController);
+
+// Add Department Route
+router.post("/:companyId/departments", authenticate, validate(addDepartmentSchema), addDepartmentController);
+
+// Update Department Route
+router.put("/:companyId/departments/:departmentId", authenticate, validate(updateDepartmentSchema), updateDepartmentController);
+
+// Delete Department Route
+router.delete("/:companyId/departments/:departmentId", authenticate, deleteDepartmentController);
+
+// Get All Departments Route
+router.get("/:companyId/departments", authenticate, getAllDepartmentsController);
+
+// Get Department by ID Route
+router.get("/:companyId/departments/:departmentId", authenticate, getDepartmentByIdController);
+
+/**
+ * @swagger
+ * /company/{companyId}/positions:
+ *   get:
+ *     summary: Get company positions with pagination
+ *     tags: [Company Management]
+ *     security:
+ *       - bearerAuth: []
+ *     description: Retrieve a paginated list of positions for a specific company
+ *     parameters:
+ *       - in: path
+ *         name: companyId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Company ID
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Number of positions per page
+ *     responses:
+ *       200:
+ *         description: Positions retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 isSuccess:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     items:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                             format: uuid
+ *                           title:
+ *                             type: string
+ *                           description:
+ *                             type: string
+ *                           level:
+ *                             type: string
+ *                           salaryMin:
+ *                             type: number
+ *                           salaryMax:
+ *                             type: number
+ *                           jobRequirements:
+ *                             type: string
+ *                           jobResponsibilities:
+ *                             type: string
+ *                           technicalSkills:
+ *                             type: string
+ *                           companyId:
+ *                             type: string
+ *                             format: uuid
+ *                           department:
+ *                             type: object
+ *                             properties:
+ *                               id:
+ *                                 type: string
+ *                                 format: uuid
+ *                               department:
+ *                                 type: string
+ *                           createdDate:
+ *                             type: string
+ *                             format: date-time
+ *                     pagination:
+ *                       type: object
+ *                       properties:
+ *                         page:
+ *                           type: integer
+ *                           example: 1
+ *                         limit:
+ *                           type: integer
+ *                           example: 10
+ *                         totalCount:
+ *                           type: integer
+ *                           example: 25
+ *                         totalPages:
+ *                           type: integer
+ *                           example: 3
+ *                         hasNextPage:
+ *                           type: boolean
+ *                           example: true
+ *                         hasPrevPage:
+ *                           type: boolean
+ *                           example: false
+ *       400:
+ *         description: Bad request - Invalid pagination parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 isSuccess:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Page number must be greater than 0
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 isSuccess:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Error retrieving positions by company ID
+ */
+router.get("/:companyId/positions", authenticate, getPositionByCompanyIdController);
+
+router.get("/:companyId/positions/:positionId", authenticate, getPositionByIdController);
+
+router.delete("/:companyId/positions/:positionId", authenticate, deletePositionController);
+
+router.post("/:companyId/positions", authenticate, validate(addPositionSchema), addPositionController);
+
+router.put("/:companyId/positions/:positionId", authenticate, validate(updatePositionSchema), updatePositionController);
+
 
 module.exports = router;
