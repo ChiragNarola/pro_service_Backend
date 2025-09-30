@@ -568,7 +568,6 @@ export const getPositionByCompanyId = async (companyId: string, page: number = 1
       createdDate: 'desc'
     },
   });
-  console.log("🚀 ~ getPositionByCompanyId ~ positions:", positions)
 
   const totalCount = await prisma.companyPosition.count({
     where: { companyId, isDeleted: false },
