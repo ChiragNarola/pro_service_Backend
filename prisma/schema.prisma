@@ -165,7 +165,6 @@ model CompanyDetail {
   companyDepartments  CompanyDepartment[]
   companyPositions    CompanyPosition[]
   invoiceTemplates    CompanyInvoiceTemplate[]
-  emailTemplates      CompanyEmailTemplate[]
   notificationRules   CompanyNotificationRule[]
 
   @@index([planId])
@@ -435,32 +434,10 @@ model CompanyInvoiceTemplate {
   deletedDate   DateTime?
   isDeleted     Boolean       @default(false)
   company       CompanyDetail @relation(fields: [companyId], references: [id])
+  notificationRules CompanyNotificationRule[]
 
   @@index([companyId])
   @@index([status])
-  @@index([createdBy])
-  @@index([modifiedBy])
-  @@index([deletedBy])
-}
-
-model CompanyEmailTemplate {
-  id            String        @id @default(uuid()) @db.Uuid
-  companyId     String        @db.Uuid
-  name          String        @db.VarChar(150)
-  subject       String        @db.VarChar(255)
-  eventKey      String        @db.VarChar(50)
-  body          String        @db.VarChar(10000)
-  createdBy     String        @db.VarChar(100)
-  createdDate   DateTime      @default(now())
-  modifiedBy    String?       @db.VarChar(100)
-  modifiedDate  DateTime?
-  deletedBy     String?       @db.VarChar(100)
-  deletedDate   DateTime?
-  isDeleted     Boolean       @default(false)
-  company       CompanyDetail @relation(fields: [companyId], references: [id])
-
-  @@index([companyId])
-  @@index([eventKey])
   @@index([createdBy])
   @@index([modifiedBy])
   @@index([deletedBy])
@@ -539,22 +516,24 @@ enum PaymentGateway {
 }
 
 /// Notification system for company-level automated rules
-  model CompanyNotificationRule {
-   id            String                         @id @default(uuid()) @db.Uuid
-   companyId     String                         @db.Uuid
-   name          String                         @db.VarChar(150)
-   description   String?                        @db.VarChar(500)
-   isActive      Boolean                        @default(true)
-   createdBy     String                         @db.VarChar(100)
-   createdDate   DateTime                       @default(now())
-   modifiedBy    String?                        @db.VarChar(100)
-   modifiedDate  DateTime?
-   deletedBy     String?                        @db.VarChar(100)
-   deletedDate   DateTime?
-   isDeleted     Boolean                        @default(false)
-   company       CompanyDetail                  @relation(fields: [companyId], references: [id])
-   channels      CompanyNotificationChannel[]
-   recipients    CompanyNotificationRecipient[]
+model CompanyNotificationRule {
+  id            String                         @id @default(uuid()) @db.Uuid
+  companyId     String                         @db.Uuid
+  name          String                         @db.VarChar(150)
+  description   String?                        @db.VarChar(500)
+  templateId    String?                        @db.Uuid
+  isActive      Boolean                        @default(true)
+  createdBy     String                         @db.VarChar(100)
+  createdDate   DateTime                       @default(now())
+  modifiedBy    String?                        @db.VarChar(100)
+  modifiedDate  DateTime?
+  deletedBy     String?                        @db.VarChar(100)
+  deletedDate   DateTime?
+  isDeleted     Boolean                        @default(false)
+  company       CompanyDetail                  @relation(fields: [companyId], references: [id])
+  template      CompanyInvoiceTemplate?        @relation(fields: [templateId], references: [id])
+  channels      CompanyNotificationChannel[]
+  recipients    CompanyNotificationRecipient[]
 
   @@index([companyId])
   @@index([createdBy])

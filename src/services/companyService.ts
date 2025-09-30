@@ -597,7 +597,7 @@ export const getPositionById = async (positionId: string) => {
 export type CreateNotificationRuleInput = {
   name: string;
   description?: string | null;
-  eventKey: 'JobAssigned' | 'InvoiceDue' | 'PaymentReceived' | 'JobCompleted';
+  templateId?: string | null;
   isActive?: boolean;
   channels?: Array<'Email' | 'SMS' | 'Push'>;
   recipients?: Array<'assigned_employee' | 'manager' | 'client' | 'accounting'>;
@@ -613,6 +613,9 @@ export const createCompanyNotificationRule = async (
       company: { connect: { id: companyId } },
       name: input.name,
       description: input.description ?? null,
+      ...(input.templateId
+        ? { template: { connect: { id: input.templateId } } }
+        : {}),
       isActive: input.isActive ?? true,
       createdBy,
       channels: {
@@ -622,7 +625,7 @@ export const createCompanyNotificationRule = async (
         create: (input.recipients ?? ['assigned_employee']).map((r) => ({ type: r as any, createdBy })),
       },
     },
-    include: { channels: true, recipients: true },
+    include: { channels: true, recipients: true, template: true },
   });
   return rule;
 };
@@ -635,6 +638,11 @@ export const updateCompanyNotificationRule = async (ruleId: string, input: Updat
     data: {
       name: input.name,
       description: input.description,
+      ...(input.templateId !== undefined
+        ? input.templateId
+          ? { template: { connect: { id: input.templateId } } }
+          : { template: { disconnect: true } }
+        : {}),
       isActive: input.isActive,
       modifiedBy,
       modifiedDate: new Date(),
@@ -646,7 +654,7 @@ export const updateCompanyNotificationRule = async (ruleId: string, input: Updat
         ? { recipients: { deleteMany: {}, create: input.recipients.map((r) => ({ type: r as any, createdBy: modifiedBy })) } }
         : {}),
     },
-    include: { channels: true, recipients: true },
+    include: { channels: true, recipients: true, template: true },
   });
   return updated;
 };
@@ -662,7 +670,7 @@ export const deleteCompanyNotificationRule = async (ruleId: string, modifiedBy: 
 export const getCompanyNotificationRuleById = async (ruleId: string) => {
   return prisma.companyNotificationRule.findUnique({
     where: { id: ruleId, isDeleted: false },
-    include: { channels: true, recipients: true },
+    include: { channels: true, recipients: true, template: true },
   });
 };
 
@@ -670,7 +678,7 @@ export const listCompanyNotificationRules = async (companyId: string) => {
   return prisma.companyNotificationRule.findMany({
     where: { companyId, isDeleted: false },
     orderBy: { createdDate: 'desc' },
-    include: { channels: true, recipients: true },
+    include: { channels: true, recipients: true, template: true },
   });
 };
 
