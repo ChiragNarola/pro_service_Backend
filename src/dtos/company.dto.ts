@@ -145,3 +145,16 @@ export const updateInvoiceTemplateSchema = Joi.object({
   status: Joi.string().valid('active', 'inactive'),
   templateHtml: Joi.string().allow(null, ''),
 });
+
+// ================= Inventory Category Schemas =================
+export const addInventoryCategorySchema = Joi.object({
+  name: Joi.string().max(100).required(),
+  description: Joi.string().max(100).allow(null, ''),
+  status: Joi.boolean().default(true),
+});
+
+export const updateInventoryCategorySchema = Joi.object({
+  name: Joi.string().max(100),
+  description: Joi.string().max(100).allow(null, ''),
+  status: Joi.boolean(),
+});

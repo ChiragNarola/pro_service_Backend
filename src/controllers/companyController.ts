@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { getCompanyStatistics, updateCompany, getAllCompanies, UpdateCompanyInput, getCompanyByCompanyId, changeCompanyStatus, getCompanyByUserID, getLeavesByCompanyId, addLeave, updateLeave, deleteLeave, updateCompanyLogo, updateCompanyColors, addDepartment, updateDepartment, deleteDepartment, getAllDepartments, getDepartmentById, addPosition, updatePosition, deletePosition, getPositionByCompanyId, getPositionById, createCompanyNotificationRule, updateCompanyNotificationRule, deleteCompanyNotificationRule, getCompanyNotificationRuleById, listCompanyNotificationRules, createInvoiceTemplate, updateInvoiceTemplate, deleteInvoiceTemplate, getInvoiceTemplateById, listInvoiceTemplates } from '../services/companyService';
+import { getCompanyStatistics, updateCompany, getAllCompanies, UpdateCompanyInput, getCompanyByCompanyId, changeCompanyStatus, getCompanyByUserID, getLeavesByCompanyId, addLeave, updateLeave, deleteLeave, updateCompanyLogo, updateCompanyColors, addDepartment, updateDepartment, deleteDepartment, getAllDepartments, getDepartmentById, addPosition, updatePosition, deletePosition, getPositionByCompanyId, getPositionById, createCompanyNotificationRule, updateCompanyNotificationRule, deleteCompanyNotificationRule, getCompanyNotificationRuleById, listCompanyNotificationRules, createInvoiceTemplate, updateInvoiceTemplate, deleteInvoiceTemplate, getInvoiceTemplateById, listInvoiceTemplates, createInventorySupplier, updateInventorySupplier, deleteInventorySupplier, getInventorySupplierById, listInventorySuppliers, createInventoryCategory, updateInventoryCategory, deleteInventoryCategory, getInventoryCategoryById, listInventoryCategories } from '../services/companyService';
 import { successResponse, errorResponse } from '../utils/responseHelper';
 
 export const getCompanyStatisticsController = async (req: Request, res: Response) => {
@@ -25,7 +25,6 @@ export const updateCompanyController = async (req: Request, res: Response) => {
       ...req.body,
       modifiedBy: req.user?.id || 'system',
     };
-
     const company = await updateCompany(companyId, input);
     successResponse(res, company, 200);
   } catch (error: any) {
@@ -385,5 +384,113 @@ export const deleteInvoiceTemplateController = async (req: Request, res: Respons
     successResponse(res, deleted, 200);
   } catch (error: any) {
     errorResponse(res, 'Error deleting invoice template', 500);
+  }
+};
+
+// ================= Inventory Supplier Controllers =================
+export const listInventorySuppliersController = async (req: Request, res: Response) => {
+  try {
+    const { companyId } = req.params;
+    const page = parseInt((req.query.page as string) || '1', 10);
+    const limit = parseInt((req.query.limit as string) || '10', 10);
+    const result = await listInventorySuppliers(companyId, page, limit);
+    successResponse(res, result, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error listing inventory suppliers', 500);
+  }
+};
+
+export const getInventorySupplierByIdController = async (req: Request, res: Response) => {
+  try {
+    const { supplierId } = req.params;
+    const item = await getInventorySupplierById(supplierId);
+    successResponse(res, item, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error retrieving inventory supplier', 500);
+  }
+};
+
+export const addInventorySupplierController = async (req: Request, res: Response) => {
+  try {
+    const { companyId } = req.params;
+    const created = await createInventorySupplier(companyId, req.body, req.user?.id || 'system');
+    successResponse(res, created, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error creating inventory supplier', 500);
+  }
+};
+
+export const updateInventorySupplierController = async (req: Request, res: Response) => {
+  try {
+    const { supplierId } = req.params;
+    const updated = await updateInventorySupplier(supplierId, req.body, req.user?.id || 'system');
+    console.log("🚀 ~ updateInventorySupplierController ~ updated:", updated)
+    successResponse(res, updated, 200);
+  } catch (error: any) {
+    console.log("🚀 ~ updateInventorySupplierController ~ error:", error)
+    errorResponse(res, 'Error updating inventory supplier', 500);
+  }
+};
+
+export const deleteInventorySupplierController = async (req: Request, res: Response) => {
+  try {
+    const { supplierId } = req.params;
+    const deleted = await deleteInventorySupplier(supplierId, req.user?.id || 'system');
+    successResponse(res, deleted, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error deleting inventory supplier', 500);
+  }
+};
+
+// ================= Inventory Categories Controllers =================
+export const listInventoryCategoriesController = async (req: Request, res: Response) => {
+  try {
+    const { companyId } = req.params;
+    const page = parseInt((req.query.page as string) || '1', 10);
+    const limit = parseInt((req.query.limit as string) || '10', 10);
+    const result = await listInventoryCategories(companyId, page, limit);
+    successResponse(res, result, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error listing inventory categories', 500);
+  }
+};
+
+export const getInventoryCategoryByIdController = async (req: Request, res: Response) => {
+  try {
+    const { categoryId } = req.params;
+    const item = await getInventoryCategoryById(categoryId);
+    successResponse(res, item, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error retrieving inventory category', 500);
+  }
+};
+
+export const addInventoryCategoryController = async (req: Request, res: Response) => {
+  try {
+    const { companyId } = req.params;
+    const created = await createInventoryCategory(companyId, req.body, req.user?.id || 'system');
+    successResponse(res, created, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error creating inventory category', 500);
+  }
+};
+
+export const updateInventoryCategoryController = async (req: Request, res: Response) => {
+  try {
+    const { categoryId } = req.params;
+    const updated = await updateInventoryCategory(categoryId, req.body, req.user?.id || 'system');
+    successResponse(res, updated, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error updating inventory category', 500);
+  }
+};
+
+export const deleteInventoryCategoryController = async (req: Request, res: Response) => {
+  try {
+    const { categoryId } = req.params;
+    const deleted = await deleteInventoryCategory(categoryId, req.user?.id || 'system');
+    successResponse(res, deleted, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error deleting inventory category', 500);
   }
 };

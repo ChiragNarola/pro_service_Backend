@@ -1,4 +1,4 @@
-import { PrismaClient, CompanyDetail } from '@prisma/client';
+import { PrismaClient, CompanyDetail, UserStatus } from '@prisma/client';
 import { updateCompanyData } from '../repositories/userRepo';
 
 const prisma = new PrismaClient();
@@ -742,6 +742,137 @@ export const listInvoiceTemplates = async (companyId: string, page: number = 1, 
   const [items, totalCount] = await Promise.all([
     prisma.companyInvoiceTemplate.findMany({ where, skip, take: limit, orderBy: { createdDate: 'desc' } }),
     prisma.companyInvoiceTemplate.count({ where })
+  ]);
+  return {
+    items,
+    pagination: {
+      page,
+      limit,
+      totalCount,
+      totalPages: Math.ceil(totalCount / limit),
+      hasNextPage: page < Math.ceil(totalCount / limit),
+      hasPrevPage: page > 1,
+    }
+  };
+};
+
+export type InventorySupplierCreateInput = {
+  name: string;
+  description: string;
+  status: UserStatus;
+};
+
+export type InventorySupplierUpdateInput = Partial<InventorySupplierCreateInput>;
+
+export const createInventorySupplier = async (companyId: string, input: InventorySupplierCreateInput, createdBy: string) => {
+  return prisma.inventorySupplier.create({
+    data: {
+      company: { connect: { id: companyId } },
+      name: input.name,
+      description: input.description,
+      status: input.status as UserStatus,
+      createdBy,
+    }
+  });
+};
+
+export const updateInventorySupplier = async (supplierId: string, input: InventorySupplierUpdateInput, modifiedBy: string) => {
+  console.log("🚀 ~ updateInventorySupplier ~ input:", input)
+  console.log("🚀 ~ updateInventorySupplier ~ supplierId:", supplierId)
+  return prisma.inventorySupplier.update({
+    where: { id: supplierId, isDeleted: false },
+    data: {
+      name: input.name,
+      description: input.description,
+      status: input.status as UserStatus,
+      modifiedBy,
+      modifiedDate: new Date(),
+    }
+  });
+};
+
+export const deleteInventorySupplier = async (supplierId: string, modifiedBy: string) => {
+  return prisma.inventorySupplier.update({
+    where: { id: supplierId, isDeleted: false },
+    data: { isDeleted: true, deletedBy: modifiedBy, deletedDate: new Date() }
+  });
+};
+
+export const getInventorySupplierById = async (supplierId: string) => {
+  return prisma.inventorySupplier.findUnique({ where: { id: supplierId, isDeleted: false } });
+};
+
+export const listInventorySuppliers = async (companyId: string, page: number = 1, limit: number = 10) => {
+  const skip = (page - 1) * limit;
+  const where = { companyId, isDeleted: false } as const;
+  const [items, totalCount] = await Promise.all([
+    prisma.inventorySupplier.findMany({ where, skip, take: limit, orderBy: { createdDate: 'desc' } }),
+    prisma.inventorySupplier.count({ where })
+  ]);
+  return {
+    items,
+    pagination: {
+      page,
+      limit,
+      totalCount,
+      totalPages: Math.ceil(totalCount / limit),
+      hasNextPage: page < Math.ceil(totalCount / limit),
+      hasPrevPage: page > 1,
+    }
+  };
+};
+
+// ================= Inventory Categories =================
+export type InventoryCategoryCreateInput = {
+  name: string;
+  description?: string | null;
+  status?: boolean;
+};
+
+export type InventoryCategoryUpdateInput = Partial<InventoryCategoryCreateInput>;
+
+export const createInventoryCategory = async (companyId: string, input: InventoryCategoryCreateInput, createdBy: string) => {
+  return prisma.inventoryCategory.create({
+    data: {
+      company: { connect: { id: companyId } },
+      name: input.name,
+      description: input.description ?? null,
+      status: input.status ?? true,
+      createdBy,
+    }
+  });
+};
+
+export const updateInventoryCategory = async (categoryId: string, input: InventoryCategoryUpdateInput, modifiedBy: string) => {
+  return prisma.inventoryCategory.update({
+    where: { id: categoryId, isDeleted: false },
+    data: {
+      name: input.name,
+      description: input.description,
+      status: input.status,
+      modifiedBy,
+      modifiedDate: new Date(),
+    }
+  });
+};
+
+export const deleteInventoryCategory = async (categoryId: string, modifiedBy: string) => {
+  return prisma.inventoryCategory.update({
+    where: { id: categoryId, isDeleted: false },
+    data: { isDeleted: true, deletedBy: modifiedBy, deletedDate: new Date() }
+  });
+};
+
+export const getInventoryCategoryById = async (categoryId: string) => {
+  return prisma.inventoryCategory.findUnique({ where: { id: categoryId, isDeleted: false } });
+};
+
+export const listInventoryCategories = async (companyId: string, page: number = 1, limit: number = 10) => {
+  const skip = (page - 1) * limit;
+  const where = { companyId, isDeleted: false } as const;
+  const [items, totalCount] = await Promise.all([
+    prisma.inventoryCategory.findMany({ where, skip, take: limit, orderBy: { createdDate: 'desc' } }),
+    prisma.inventoryCategory.count({ where })
   ]);
   return {
     items,

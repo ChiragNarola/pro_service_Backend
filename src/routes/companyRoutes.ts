@@ -1,8 +1,8 @@
 import express, { Router } from 'express';
 import authenticate from '../logs/middlewares/authMiddleware';
-import { getCompanyStatisticsController, updateCompanyController, getAllCompaniesController, getCompanyByCompanyIdController, changeCompanyStatusController, getCompanyByUserIDController, getLeavesByCompanyIdController, addLeaveController, updateLeaveController, deleteLeaveController, uploadCompanyLogoController, updateCompanyColorsController, addDepartmentController, updateDepartmentController, deleteDepartmentController, getAllDepartmentsController, getDepartmentByIdController, getPositionByCompanyIdController, getPositionByIdController, deletePositionController, addPositionController, updatePositionController, listNotificationRulesController, getNotificationRuleByIdController, addNotificationRuleController, updateNotificationRuleController, deleteNotificationRuleController, listInvoiceTemplatesController, getInvoiceTemplateByIdController, addInvoiceTemplateController, updateInvoiceTemplateController, deleteInvoiceTemplateController } from '../controllers/companyController';
+import { getCompanyStatisticsController, updateCompanyController, getAllCompaniesController, getCompanyByCompanyIdController, changeCompanyStatusController, getCompanyByUserIDController, getLeavesByCompanyIdController, addLeaveController, updateLeaveController, deleteLeaveController, uploadCompanyLogoController, updateCompanyColorsController, addDepartmentController, updateDepartmentController, deleteDepartmentController, getAllDepartmentsController, getDepartmentByIdController, getPositionByCompanyIdController, getPositionByIdController, deletePositionController, addPositionController, updatePositionController, listNotificationRulesController, getNotificationRuleByIdController, addNotificationRuleController, updateNotificationRuleController, deleteNotificationRuleController, listInvoiceTemplatesController, getInvoiceTemplateByIdController, addInvoiceTemplateController, updateInvoiceTemplateController, deleteInvoiceTemplateController, listInventorySuppliersController, getInventorySupplierByIdController, addInventorySupplierController, updateInventorySupplierController, deleteInventorySupplierController, listInventoryCategoriesController, getInventoryCategoryByIdController, addInventoryCategoryController, updateInventoryCategoryController, deleteInventoryCategoryController } from '../controllers/companyController';
 import { uploadBrandLogo } from '../middlewares/uploadMiddleware';
-import { updateCompanySchema, addLeaveSchema, updateLeaveSchema, updateCompanyColorsSchema, addDepartmentSchema, updateDepartmentSchema, addPositionSchema, updatePositionSchema, addInvoiceTemplateSchema, updateInvoiceTemplateSchema } from '../dtos/company.dto';
+import { updateCompanySchema, addLeaveSchema, updateLeaveSchema, updateCompanyColorsSchema, addDepartmentSchema, updateDepartmentSchema, addPositionSchema, updatePositionSchema, addInvoiceTemplateSchema, updateInvoiceTemplateSchema, addInventoryCategorySchema, updateInventoryCategorySchema } from '../dtos/company.dto';
 import validate from '../logs/middlewares/validateRequest';
 
 const router: Router = express.Router();
@@ -771,5 +771,19 @@ router.post('/:companyId/invoice-templates', authenticate, validate(addInvoiceTe
 router.put('/:companyId/invoice-templates/:templateId', authenticate, validate(updateInvoiceTemplateSchema), updateInvoiceTemplateController);
 
 router.delete('/:companyId/invoice-templates/:templateId', authenticate, deleteInvoiceTemplateController);
+
+// Inventory Suppliers CRUD
+router.get('/:companyId/inventory/suppliers', authenticate, listInventorySuppliersController);
+router.get('/:companyId/inventory/suppliers/:supplierId', authenticate, getInventorySupplierByIdController);
+router.post('/:companyId/inventory/suppliers', authenticate, addInventorySupplierController);
+router.put('/:companyId/inventory/suppliers/:supplierId', authenticate, updateInventorySupplierController);
+router.delete('/:companyId/inventory/suppliers/:supplierId', authenticate, deleteInventorySupplierController);
+
+// Inventory Categories CRUD
+router.get('/:companyId/inventory/categories', authenticate, listInventoryCategoriesController);
+router.get('/:companyId/inventory/categories/:categoryId', authenticate, getInventoryCategoryByIdController);
+router.post('/:companyId/inventory/categories', authenticate, validate(addInventoryCategorySchema), addInventoryCategoryController);
+router.put('/:companyId/inventory/categories/:categoryId', authenticate, validate(updateInventoryCategorySchema), updateInventoryCategoryController);
+router.delete('/:companyId/inventory/categories/:categoryId', authenticate, deleteInventoryCategoryController);
 
 module.exports = router;

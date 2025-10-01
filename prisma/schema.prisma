@@ -166,6 +166,9 @@ model CompanyDetail {
   companyPositions    CompanyPosition[]
   invoiceTemplates    CompanyInvoiceTemplate[]
   notificationRules   CompanyNotificationRule[]
+  Inventory           InventoryItem[]
+  inventoryCategories InventoryCategory[]
+  inventorySuppliers  InventorySupplier[]
 
   @@index([planId])
   @@index([createdBy])
@@ -595,4 +598,100 @@ enum NotificationRecipientType {
   manager
   client
   accounting
+}
+
+// ================= Inventory =================
+enum InventoryUnit {
+  Units
+  Pieces
+  Boxes
+  Packs
+}
+
+model InventoryCategory {
+  id           String         @id @default(uuid()) @db.Uuid
+  companyId    String         @db.Uuid
+  name         String         @db.VarChar(100)
+  description  String?        @db.VarChar(100)
+  status       Boolean        @default(true)
+  createdBy    String         @db.VarChar(100)
+  createdDate  DateTime       @default(now())
+  modifiedBy   String?        @db.VarChar(100)
+  modifiedDate DateTime?
+  deletedBy    String?        @db.VarChar(100)
+  deletedDate  DateTime?
+  isDeleted    Boolean        @default(false)
+  company      CompanyDetail  @relation(fields: [companyId], references: [id])
+  items        InventoryItem[]
+
+  @@unique([companyId, name])
+  @@index([companyId])
+  @@index([status])
+}
+
+model InventorySupplier {
+  id           String         @id @default(uuid()) @db.Uuid
+  companyId    String         @db.Uuid
+  name         String         @db.VarChar(150)
+  description  String?        @db.VarChar(150)
+  status       UserStatus     @default(Active)
+  createdBy    String         @db.VarChar(100)
+  createdDate  DateTime       @default(now())
+  modifiedBy   String?        @db.VarChar(100)
+  modifiedDate DateTime?
+  deletedBy    String?        @db.VarChar(100)
+  deletedDate  DateTime?
+  isDeleted    Boolean        @default(false)
+  company      CompanyDetail  @relation(fields: [companyId], references: [id])
+  items        InventoryItem[]
+
+  @@unique([companyId, name])
+  @@index([companyId])
+}
+
+model InventoryItem {
+  id               String             @id @default(uuid()) @db.Uuid
+  companyId        String             @db.Uuid
+  name             String             @db.VarChar(150)
+  categoryId       String?            @db.Uuid
+  brand            String?            @db.VarChar(100)
+  sku              String             @db.VarChar(100)
+  model            String?            @db.VarChar(100)
+  location         String?            @db.VarChar(255)
+  supplierId       String?            @db.Uuid
+  purchaseDate     DateTime?
+  description      String?            @db.VarChar(2000)
+  quantity         Int                @default(0)
+  unit             InventoryUnit      @default(Units)
+  unitPrice        Float              @default(0)
+  warrantyExpiry   DateTime?
+  notes            String?            @db.VarChar(1000)
+  createdBy        String             @db.VarChar(100)
+  createdDate      DateTime           @default(now())
+  modifiedBy       String?            @db.VarChar(100)
+  modifiedDate     DateTime?
+  deletedBy        String?            @db.VarChar(100)
+  deletedDate      DateTime?
+  isDeleted        Boolean            @default(false)
+  company          CompanyDetail      @relation(fields: [companyId], references: [id])
+  category         InventoryCategory? @relation(fields: [categoryId], references: [id])
+  supplier         InventorySupplier? @relation(fields: [supplierId], references: [id])
+  serialNumbers    InventorySerial[]
+
+  @@unique([companyId, sku])
+  @@index([companyId])
+  @@index([categoryId])
+  @@index([supplierId])
+  @@index([createdBy])
+}
+
+model InventorySerial {
+  id           String        @id @default(uuid()) @db.Uuid
+  itemId       String        @db.Uuid
+  serial       String        @unique @db.VarChar(200)
+  createdBy    String        @db.VarChar(100)
+  createdDate  DateTime      @default(now())
+  item         InventoryItem @relation(fields: [itemId], references: [id])
+
+  @@index([itemId])
 }
