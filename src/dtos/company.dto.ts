@@ -192,6 +192,7 @@ export const updateInventoryItemSchema = Joi.object({
   unit: Joi.string().valid('Units', 'Pieces', 'Boxes', 'Packs'),
   unitPrice: Joi.number().min(0),
   warrantyExpiry: Joi.date().allow(null, ''),
+  serialNumbers: Joi.array().items({id: Joi.string().uuid().allow(null, ''), serial: Joi.string().max(200)}).max(1000).allow(null, ''),
   notes: Joi.string().max(1000).allow(null, ''),
 });
 

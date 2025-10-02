@@ -968,7 +968,6 @@ export const createInventoryItem = async (companyId: string, input: InventoryIte
 };
 
 export const updateInventoryItem = async (itemId: string, input: InventoryItemUpdateInput, modifiedBy: string) => {
-  // Get the current item to check companyId
   const currentItem = await prisma.inventoryItem.findUnique({
     where: { id: itemId, isDeleted: false },
   });
@@ -977,14 +976,13 @@ export const updateInventoryItem = async (itemId: string, input: InventoryItemUp
     throw new Error('Inventory item not found.');
   }
 
-  // If SKU is being updated, check for duplicates
   if (input.sku && input.sku !== currentItem.sku) {
     const existingItem = await prisma.inventoryItem.findFirst({
       where: {
         companyId: currentItem.companyId,
         sku: input.sku,
         isDeleted: false,
-        id: { not: itemId }, // Exclude current item
+        id: { not: itemId },
       },
     });
 
@@ -993,7 +991,7 @@ export const updateInventoryItem = async (itemId: string, input: InventoryItemUp
     }
   }
 
-  return prisma.inventoryItem.update({
+  const updated = await prisma.inventoryItem.update({
     where: { id: itemId, isDeleted: false },
     data: {
       name: input.name,
@@ -1014,6 +1012,39 @@ export const updateInventoryItem = async (itemId: string, input: InventoryItemUp
       modifiedDate: new Date(),
     }
   });
+
+  const newSerials = (input.serialNumbers as any[])?.filter((serial) =>
+    serial != null && typeof serial === 'object' && 'id' in serial && serial.id === ''
+  ) || [];
+
+  if (newSerials.length > 0) {
+    await prisma.inventorySerial.createMany({
+      data: newSerials.map((serial) => ({
+        itemId: itemId,
+        serial: serial.serial,
+        createdDate: new Date(),
+        createdBy: modifiedBy,
+      }))
+    });
+  }
+
+  const getExistingSerials = await prisma.inventorySerial.findMany({
+    where: { itemId: itemId }
+  });
+  const newSerialNumbers = input.serialNumbers as any[]
+
+  const deletedSerials = getExistingSerials.filter((serial) => !(newSerialNumbers as any[]).some((s) => s.serial === serial.serial));
+
+  if (deletedSerials.length > 0) {
+    deletedSerials.forEach(async (serial) => {
+      await prisma.inventorySerial.delete({
+        where: { id: serial.id }
+      });
+    });
+  }
+
+  // return input;
+  return updated;
 };
 
 export const deleteInventoryItem = async (itemId: string, modifiedBy: string) => {
@@ -1129,7 +1160,7 @@ export const bulkCreateInventoryItems = async (companyId: string, items: Invento
           serialNumbers: true,
         }
       });
-      
+
       // Create serial numbers if provided
       if (item.serialNumbers && item.serialNumbers.length > 0) {
         await Promise.all(
@@ -1144,7 +1175,7 @@ export const bulkCreateInventoryItems = async (companyId: string, items: Invento
           )
         );
       }
-      
+
       results.push(createdItem);
     }
     return results;
