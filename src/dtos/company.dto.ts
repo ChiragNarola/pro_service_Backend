@@ -158,3 +158,44 @@ export const updateInventoryCategorySchema = Joi.object({
   description: Joi.string().max(100).allow(null, ''),
   status: Joi.boolean(),
 });
+
+// ================= Inventory Item Schemas =================
+export const addInventoryItemSchema = Joi.object({
+  name: Joi.string().max(150).required(),
+  categoryId: Joi.string().uuid().allow(null, ''),
+  brand: Joi.string().max(100).allow(null, ''),
+  sku: Joi.string().max(100).required(),
+  model: Joi.string().max(100).allow(null, ''),
+  location: Joi.string().max(255).allow(null, ''),
+  supplierId: Joi.string().uuid().allow(null, ''),
+  purchaseDate: Joi.date().allow(null, ''),
+  description: Joi.string().max(2000).allow(null, ''),
+  quantity: Joi.number().integer().min(0).required(),
+  unit: Joi.string().valid('Units', 'Pieces', 'Boxes', 'Packs').required(),
+  unitPrice: Joi.number().min(0).required(),
+  warrantyExpiry: Joi.date().allow(null, ''),
+  notes: Joi.string().max(1000).allow(null, ''),
+  serialNumbers: Joi.array().items(Joi.string().max(200)).max(1000).allow(null, ''),
+}).unknown(true);
+
+export const updateInventoryItemSchema = Joi.object({
+  name: Joi.string().max(150),
+  categoryId: Joi.string().uuid().allow(null, ''),
+  brand: Joi.string().max(100).allow(null, ''),
+  sku: Joi.string().max(100),
+  model: Joi.string().max(100).allow(null, ''),
+  location: Joi.string().max(255).allow(null, ''),
+  supplierId: Joi.string().uuid().allow(null, ''),
+  purchaseDate: Joi.date().allow(null, ''),
+  description: Joi.string().max(2000).allow(null, ''),
+  quantity: Joi.number().integer().min(0),
+  unit: Joi.string().valid('Units', 'Pieces', 'Boxes', 'Packs'),
+  unitPrice: Joi.number().min(0),
+  warrantyExpiry: Joi.date().allow(null, ''),
+  notes: Joi.string().max(1000).allow(null, ''),
+});
+
+export const bulkCreateInventoryItemsSchema = Joi.object({
+  companyId: Joi.string().required(),
+  items: Joi.array().items(addInventoryItemSchema).min(1).max(100).required()
+}).unknown(true);

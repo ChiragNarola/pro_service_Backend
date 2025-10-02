@@ -1,8 +1,8 @@
 import express, { Router } from 'express';
 import authenticate from '../logs/middlewares/authMiddleware';
-import { getCompanyStatisticsController, updateCompanyController, getAllCompaniesController, getCompanyByCompanyIdController, changeCompanyStatusController, getCompanyByUserIDController, getLeavesByCompanyIdController, addLeaveController, updateLeaveController, deleteLeaveController, uploadCompanyLogoController, updateCompanyColorsController, addDepartmentController, updateDepartmentController, deleteDepartmentController, getAllDepartmentsController, getDepartmentByIdController, getPositionByCompanyIdController, getPositionByIdController, deletePositionController, addPositionController, updatePositionController, listNotificationRulesController, getNotificationRuleByIdController, addNotificationRuleController, updateNotificationRuleController, deleteNotificationRuleController, listInvoiceTemplatesController, getInvoiceTemplateByIdController, addInvoiceTemplateController, updateInvoiceTemplateController, deleteInvoiceTemplateController, listInventorySuppliersController, getInventorySupplierByIdController, addInventorySupplierController, updateInventorySupplierController, deleteInventorySupplierController, listInventoryCategoriesController, getInventoryCategoryByIdController, addInventoryCategoryController, updateInventoryCategoryController, deleteInventoryCategoryController } from '../controllers/companyController';
+import { getCompanyStatisticsController, updateCompanyController, getAllCompaniesController, getCompanyByCompanyIdController, changeCompanyStatusController, getCompanyByUserIDController, getLeavesByCompanyIdController, addLeaveController, updateLeaveController, deleteLeaveController, uploadCompanyLogoController, updateCompanyColorsController, addDepartmentController, updateDepartmentController, deleteDepartmentController, getAllDepartmentsController, getDepartmentByIdController, getPositionByCompanyIdController, getPositionByIdController, deletePositionController, addPositionController, updatePositionController, listNotificationRulesController, getNotificationRuleByIdController, addNotificationRuleController, updateNotificationRuleController, deleteNotificationRuleController, listInvoiceTemplatesController, getInvoiceTemplateByIdController, addInvoiceTemplateController, updateInvoiceTemplateController, deleteInvoiceTemplateController, listInventorySuppliersController, getInventorySupplierByIdController, addInventorySupplierController, updateInventorySupplierController, deleteInventorySupplierController, listInventoryCategoriesController, getInventoryCategoryByIdController, addInventoryCategoryController, updateInventoryCategoryController, deleteInventoryCategoryController, listInventoryItemsController, getInventoryItemByIdController, addInventoryItemController, updateInventoryItemController, deleteInventoryItemController, bulkCreateInventoryItemsController } from '../controllers/companyController';
 import { uploadBrandLogo } from '../middlewares/uploadMiddleware';
-import { updateCompanySchema, addLeaveSchema, updateLeaveSchema, updateCompanyColorsSchema, addDepartmentSchema, updateDepartmentSchema, addPositionSchema, updatePositionSchema, addInvoiceTemplateSchema, updateInvoiceTemplateSchema, addInventoryCategorySchema, updateInventoryCategorySchema } from '../dtos/company.dto';
+import { updateCompanySchema, addLeaveSchema, updateLeaveSchema, updateCompanyColorsSchema, addDepartmentSchema, updateDepartmentSchema, addPositionSchema, updatePositionSchema, addInvoiceTemplateSchema, updateInvoiceTemplateSchema, addInventoryCategorySchema, updateInventoryCategorySchema, addInventoryItemSchema, updateInventoryItemSchema, bulkCreateInventoryItemsSchema } from '../dtos/company.dto';
 import validate from '../logs/middlewares/validateRequest';
 
 const router: Router = express.Router();
@@ -565,47 +565,27 @@ router.get("/:companyId/statistics", authenticate, getCompanyStatisticsControlle
 
 // Get Company by ID Route
 router.get("/:companyId", authenticate, getCompanyByCompanyIdController);
-
-// Update Company Route
 router.put("/:companyId", authenticate, validate(updateCompanySchema), updateCompanyController);
-
-// Update Company Route
 router.patch("/:companyId", authenticate, validate(updateCompanyColorsSchema), updateCompanyColorsController);
 
 // Change Company Status
 router.patch("/:companyId/status", authenticate, changeCompanyStatusController);
-
-// Get All Companies Route
 router.get("/", authenticate, getAllCompaniesController);
 
-//Get Leaves By Company ID Route
+//Leaves
 router.get("/:companyId/leaves/:year", authenticate, getLeavesByCompanyIdController);
-
-// Add Leave Route
 router.post("/:companyId/leaves", authenticate, validate(addLeaveSchema), addLeaveController);
-
-// Update Leave Route
 router.put("/:companyId/leaves/:leaveId", authenticate, validate(updateLeaveSchema), updateLeaveController);
-
-// Delete Leave Route
 router.delete("/:companyId/leaves/:leaveId", authenticate, deleteLeaveController);
 
 // Upload Company Logo Route
 router.post("/:companyId/logo", authenticate, uploadBrandLogo, uploadCompanyLogoController);
 
-// Add Department Route
+// Department Route
 router.post("/:companyId/departments", authenticate, validate(addDepartmentSchema), addDepartmentController);
-
-// Update Department Route
 router.put("/:companyId/departments/:departmentId", authenticate, validate(updateDepartmentSchema), updateDepartmentController);
-
-// Delete Department Route
 router.delete("/:companyId/departments/:departmentId", authenticate, deleteDepartmentController);
-
-// Get All Departments Route
 router.get("/:companyId/departments", authenticate, getAllDepartmentsController);
-
-// Get Department by ID Route
 router.get("/:companyId/departments/:departmentId", authenticate, getDepartmentByIdController);
 
 /**
@@ -741,35 +721,23 @@ router.get("/:companyId/departments/:departmentId", authenticate, getDepartmentB
  *                   example: Error retrieving positions by company ID
  */
 router.get("/:companyId/positions", authenticate, getPositionByCompanyIdController);
-
 router.get("/:companyId/positions/:positionId", authenticate, getPositionByIdController);
-
 router.delete("/:companyId/positions/:positionId", authenticate, deletePositionController);
-
 router.post("/:companyId/positions", authenticate, validate(addPositionSchema), addPositionController);
-
 router.put("/:companyId/positions/:positionId", authenticate, validate(updatePositionSchema), updatePositionController);
 
 // Notification Rules CRUD
 router.get('/:companyId/notifications', authenticate, listNotificationRulesController);
-
 router.get('/:companyId/notifications/:ruleId', authenticate, getNotificationRuleByIdController);
-
 router.post('/:companyId/notifications', authenticate, addNotificationRuleController);
-
 router.put('/:companyId/notifications/:ruleId', authenticate, updateNotificationRuleController);
-
 router.delete('/:companyId/notifications/:ruleId', authenticate, deleteNotificationRuleController);
 
 // Invoice Templates CRUD
 router.get('/:companyId/invoice-templates', authenticate, listInvoiceTemplatesController);
-
 router.get('/:companyId/invoice-templates/:templateId', authenticate, getInvoiceTemplateByIdController);
-
 router.post('/:companyId/invoice-templates', authenticate, validate(addInvoiceTemplateSchema), addInvoiceTemplateController);
-
 router.put('/:companyId/invoice-templates/:templateId', authenticate, validate(updateInvoiceTemplateSchema), updateInvoiceTemplateController);
-
 router.delete('/:companyId/invoice-templates/:templateId', authenticate, deleteInvoiceTemplateController);
 
 // Inventory Suppliers CRUD
@@ -785,5 +753,13 @@ router.get('/:companyId/inventory/categories/:categoryId', authenticate, getInve
 router.post('/:companyId/inventory/categories', authenticate, validate(addInventoryCategorySchema), addInventoryCategoryController);
 router.put('/:companyId/inventory/categories/:categoryId', authenticate, validate(updateInventoryCategorySchema), updateInventoryCategoryController);
 router.delete('/:companyId/inventory/categories/:categoryId', authenticate, deleteInventoryCategoryController);
+
+// Inventory Items CRUD
+router.get('/:companyId/inventory/items', authenticate, listInventoryItemsController);
+router.get('/:companyId/inventory/items/:itemId', authenticate, getInventoryItemByIdController);
+router.post('/:companyId/inventory/items', authenticate, validate(addInventoryItemSchema), addInventoryItemController);
+router.post('/:companyId/inventory/items/bulk', authenticate, validate(bulkCreateInventoryItemsSchema), bulkCreateInventoryItemsController);
+router.put('/:companyId/inventory/items/:itemId', authenticate, validate(updateInventoryItemSchema), updateInventoryItemController);
+router.delete('/:companyId/inventory/items/:itemId', authenticate, deleteInventoryItemController);
 
 module.exports = router;

@@ -777,8 +777,6 @@ export const createInventorySupplier = async (companyId: string, input: Inventor
 };
 
 export const updateInventorySupplier = async (supplierId: string, input: InventorySupplierUpdateInput, modifiedBy: string) => {
-  console.log("🚀 ~ updateInventorySupplier ~ input:", input)
-  console.log("🚀 ~ updateInventorySupplier ~ supplierId:", supplierId)
   return prisma.inventorySupplier.update({
     where: { id: supplierId, isDeleted: false },
     data: {
@@ -834,7 +832,7 @@ export type InventoryCategoryUpdateInput = Partial<InventoryCategoryCreateInput>
 export const createInventoryCategory = async (companyId: string, input: InventoryCategoryCreateInput, createdBy: string) => {
   return prisma.inventoryCategory.create({
     data: {
-      company: { connect: { id: companyId } },
+      companyId: companyId,
       name: input.name,
       description: input.description ?? null,
       status: input.status ?? true,
@@ -844,6 +842,31 @@ export const createInventoryCategory = async (companyId: string, input: Inventor
 };
 
 export const updateInventoryCategory = async (categoryId: string, input: InventoryCategoryUpdateInput, modifiedBy: string) => {
+  // Get the current category to check companyId
+  const currentCategory = await prisma.inventoryCategory.findUnique({
+    where: { id: categoryId, isDeleted: false },
+  });
+
+  if (!currentCategory) {
+    throw new Error('Category not found.');
+  }
+
+  // If name is being updated, check for duplicates
+  if (input.name && input.name !== currentCategory.name) {
+    const existingCategory = await prisma.inventoryCategory.findFirst({
+      where: {
+        companyId: currentCategory.companyId,
+        name: input.name,
+        isDeleted: false,
+        id: { not: categoryId }, // Exclude current category
+      },
+    });
+
+    if (existingCategory) {
+      throw new Error('Inventory category with this name already exists for this company.');
+    }
+  }
+
   return prisma.inventoryCategory.update({
     where: { id: categoryId, isDeleted: false },
     data: {
@@ -873,6 +896,273 @@ export const listInventoryCategories = async (companyId: string, page: number = 
   const [items, totalCount] = await Promise.all([
     prisma.inventoryCategory.findMany({ where, skip, take: limit, orderBy: { createdDate: 'desc' } }),
     prisma.inventoryCategory.count({ where })
+  ]);
+  return {
+    items,
+    pagination: {
+      page,
+      limit,
+      totalCount,
+      totalPages: Math.ceil(totalCount / limit),
+      hasNextPage: page < Math.ceil(totalCount / limit),
+      hasPrevPage: page > 1,
+    }
+  };
+};
+
+// ================= Inventory Items =================
+export type InventoryItemCreateInput = {
+  name: string;
+  categoryId?: string | null;
+  brand?: string | null;
+  sku: string;
+  model?: string | null;
+  location?: string | null;
+  supplierId?: string | null;
+  purchaseDate?: Date | null;
+  description?: string | null;
+  quantity: number;
+  unit: string;
+  unitPrice: number;
+  warrantyExpiry?: Date | null;
+  notes?: string | null;
+  serialNumbers?: string[];
+};
+
+export type InventoryItemUpdateInput = Partial<InventoryItemCreateInput>;
+
+export const createInventoryItem = async (companyId: string, input: InventoryItemCreateInput, createdBy: string) => {
+  // Check if SKU already exists for this company
+  const existingItem = await prisma.inventoryItem.findFirst({
+    where: {
+      companyId: companyId,
+      sku: input.sku,
+      isDeleted: false,
+    },
+  });
+
+  if (existingItem) {
+    throw new Error('Inventory item with this SKU already exists for this company.');
+  }
+
+  return prisma.inventoryItem.create({
+    data: {
+      companyId: companyId,
+      name: input.name,
+      categoryId: input.categoryId,
+      brand: input.brand,
+      sku: input.sku,
+      model: input.model,
+      location: input.location,
+      supplierId: input.supplierId,
+      purchaseDate: input.purchaseDate,
+      description: input.description,
+      quantity: input.quantity,
+      unit: input.unit as any,
+      unitPrice: input.unitPrice,
+      warrantyExpiry: input.warrantyExpiry,
+      notes: input.notes,
+      createdBy,
+    }
+  });
+};
+
+export const updateInventoryItem = async (itemId: string, input: InventoryItemUpdateInput, modifiedBy: string) => {
+  // Get the current item to check companyId
+  const currentItem = await prisma.inventoryItem.findUnique({
+    where: { id: itemId, isDeleted: false },
+  });
+
+  if (!currentItem) {
+    throw new Error('Inventory item not found.');
+  }
+
+  // If SKU is being updated, check for duplicates
+  if (input.sku && input.sku !== currentItem.sku) {
+    const existingItem = await prisma.inventoryItem.findFirst({
+      where: {
+        companyId: currentItem.companyId,
+        sku: input.sku,
+        isDeleted: false,
+        id: { not: itemId }, // Exclude current item
+      },
+    });
+
+    if (existingItem) {
+      throw new Error('Inventory item with this SKU already exists for this company.');
+    }
+  }
+
+  return prisma.inventoryItem.update({
+    where: { id: itemId, isDeleted: false },
+    data: {
+      name: input.name,
+      categoryId: input.categoryId,
+      brand: input.brand,
+      sku: input.sku,
+      model: input.model,
+      location: input.location,
+      supplierId: input.supplierId,
+      purchaseDate: input.purchaseDate,
+      description: input.description,
+      quantity: input.quantity,
+      unit: input.unit as any,
+      unitPrice: input.unitPrice,
+      warrantyExpiry: input.warrantyExpiry,
+      notes: input.notes,
+      modifiedBy,
+      modifiedDate: new Date(),
+    }
+  });
+};
+
+export const deleteInventoryItem = async (itemId: string, modifiedBy: string) => {
+  return prisma.inventoryItem.update({
+    where: { id: itemId, isDeleted: false },
+    data: { isDeleted: true, deletedBy: modifiedBy, deletedDate: new Date() }
+  });
+};
+
+export const getInventoryItemById = async (itemId: string) => {
+  return prisma.inventoryItem.findUnique({
+    where: { id: itemId, isDeleted: false },
+    include: {
+      category: true,
+      supplier: true,
+      serialNumbers: true,
+    }
+  });
+};
+
+export const listInventoryItems = async (companyId: string, page: number = 1, limit: number = 10, search?: string) => {
+  const skip = (page - 1) * limit;
+  const where: any = { companyId, isDeleted: false };
+
+  if (search) {
+    where.OR = [
+      { name: { contains: search, mode: 'insensitive' } },
+      { sku: { contains: search, mode: 'insensitive' } },
+      { brand: { contains: search, mode: 'insensitive' } },
+      { model: { contains: search, mode: 'insensitive' } },
+      { location: { contains: search, mode: 'insensitive' } },
+    ];
+  }
+
+  const [items, totalCount] = await Promise.all([
+    prisma.inventoryItem.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { createdDate: 'desc' },
+      include: {
+        category: true,
+        supplier: true,
+        serialNumbers: true,
+      }
+    }),
+    prisma.inventoryItem.count({ where })
+  ]);
+
+  return {
+    items,
+    pagination: {
+      page,
+      limit,
+      totalCount,
+      totalPages: Math.ceil(totalCount / limit),
+      hasNextPage: page < Math.ceil(totalCount / limit),
+      hasPrevPage: page > 1,
+    }
+  };
+};
+
+export const bulkCreateInventoryItems = async (companyId: string, items: InventoryItemCreateInput[], createdBy: string) => {
+  // Check for duplicate SKUs within the provided items
+  const skus = items.map(item => item.sku);
+  const duplicateSkus = skus.filter((sku, index) => skus.indexOf(sku) !== index);
+
+  if (duplicateSkus.length > 0) {
+    throw new Error(`Duplicate SKUs found in request: ${duplicateSkus.join(', ')}`);
+  }
+
+  // Check if any SKU already exists for this company
+  const existingItems = await prisma.inventoryItem.findMany({
+    where: {
+      companyId: companyId,
+      sku: { in: skus },
+      isDeleted: false,
+    },
+    select: { sku: true }
+  });
+
+  if (existingItems.length > 0) {
+    const existingSkus = existingItems.map(item => item.sku);
+    throw new Error(`The following SKUs already exist for this company: ${existingSkus.join(', ')}`);
+  }
+
+  // Create all items in a transaction
+  const createdItems = await prisma.$transaction(async (tx) => {
+    const results = [];
+    for (const item of items) {
+      const createdItem = await tx.inventoryItem.create({
+        data: {
+          companyId: companyId,
+          name: item.name,
+          categoryId: item.categoryId,
+          brand: item.brand,
+          sku: item.sku,
+          model: item.model,
+          location: item.location,
+          supplierId: item.supplierId,
+          purchaseDate: item.purchaseDate,
+          description: item.description,
+          quantity: item.quantity,
+          unit: item.unit as any,
+          unitPrice: item.unitPrice,
+          warrantyExpiry: item.warrantyExpiry,
+          notes: item.notes,
+          createdBy,
+        },
+        include: {
+          category: true,
+          supplier: true,
+          serialNumbers: true,
+        }
+      });
+      
+      // Create serial numbers if provided
+      if (item.serialNumbers && item.serialNumbers.length > 0) {
+        await Promise.all(
+          item.serialNumbers.map(serialNumber =>
+            tx.inventorySerial.create({
+              data: {
+                itemId: createdItem.id,
+                serial: serialNumber,
+                createdBy,
+              }
+            })
+          )
+        );
+      }
+      
+      results.push(createdItem);
+    }
+    return results;
+  });
+
+  return {
+    success: true,
+    count: createdItems.length,
+    items: createdItems,
+  };
+};
+
+export const getInventoryItemsByCompanyId = async (companyId: string, page: number = 1, limit: number = 10) => {
+  const skip = (page - 1) * limit;
+  const where: any = { companyId, isDeleted: false };
+  const [items, totalCount] = await Promise.all([
+    prisma.inventoryItem.findMany({ where, skip, take: limit, orderBy: { createdDate: 'desc' } }),
+    prisma.inventoryItem.count({ where })
   ]);
   return {
     items,

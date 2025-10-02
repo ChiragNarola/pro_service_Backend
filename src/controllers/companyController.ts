@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { getCompanyStatistics, updateCompany, getAllCompanies, UpdateCompanyInput, getCompanyByCompanyId, changeCompanyStatus, getCompanyByUserID, getLeavesByCompanyId, addLeave, updateLeave, deleteLeave, updateCompanyLogo, updateCompanyColors, addDepartment, updateDepartment, deleteDepartment, getAllDepartments, getDepartmentById, addPosition, updatePosition, deletePosition, getPositionByCompanyId, getPositionById, createCompanyNotificationRule, updateCompanyNotificationRule, deleteCompanyNotificationRule, getCompanyNotificationRuleById, listCompanyNotificationRules, createInvoiceTemplate, updateInvoiceTemplate, deleteInvoiceTemplate, getInvoiceTemplateById, listInvoiceTemplates, createInventorySupplier, updateInventorySupplier, deleteInventorySupplier, getInventorySupplierById, listInventorySuppliers, createInventoryCategory, updateInventoryCategory, deleteInventoryCategory, getInventoryCategoryById, listInventoryCategories } from '../services/companyService';
+import { getCompanyStatistics, updateCompany, getAllCompanies, UpdateCompanyInput, getCompanyByCompanyId, changeCompanyStatus, getCompanyByUserID, getLeavesByCompanyId, addLeave, updateLeave, deleteLeave, updateCompanyLogo, updateCompanyColors, addDepartment, updateDepartment, deleteDepartment, getAllDepartments, getDepartmentById, addPosition, updatePosition, deletePosition, getPositionByCompanyId, getPositionById, createCompanyNotificationRule, updateCompanyNotificationRule, deleteCompanyNotificationRule, getCompanyNotificationRuleById, listCompanyNotificationRules, createInvoiceTemplate, updateInvoiceTemplate, deleteInvoiceTemplate, getInvoiceTemplateById, listInvoiceTemplates, createInventorySupplier, updateInventorySupplier, deleteInventorySupplier, getInventorySupplierById, listInventorySuppliers, createInventoryCategory, updateInventoryCategory, deleteInventoryCategory, getInventoryCategoryById, listInventoryCategories, createInventoryItem, updateInventoryItem, deleteInventoryItem, getInventoryItemById, listInventoryItems, bulkCreateInventoryItems } from '../services/companyService';
 import { successResponse, errorResponse } from '../utils/responseHelper';
 
 export const getCompanyStatisticsController = async (req: Request, res: Response) => {
@@ -424,10 +424,8 @@ export const updateInventorySupplierController = async (req: Request, res: Respo
   try {
     const { supplierId } = req.params;
     const updated = await updateInventorySupplier(supplierId, req.body, req.user?.id || 'system');
-    console.log("🚀 ~ updateInventorySupplierController ~ updated:", updated)
     successResponse(res, updated, 200);
   } catch (error: any) {
-    console.log("🚀 ~ updateInventorySupplierController ~ error:", error)
     errorResponse(res, 'Error updating inventory supplier', 500);
   }
 };
@@ -492,5 +490,87 @@ export const deleteInventoryCategoryController = async (req: Request, res: Respo
     successResponse(res, deleted, 200);
   } catch (error: any) {
     errorResponse(res, 'Error deleting inventory category', 500);
+  }
+};
+
+export const listInventoryItemsController = async (req: Request, res: Response) => {
+  try {
+    const { companyId } = req.params;
+    const page = parseInt((req.query.page as string) || '1', 10);
+    const limit = parseInt((req.query.limit as string) || '10', 10);
+    const search = req.query.search as string;
+    const result = await listInventoryItems(companyId, page, limit, search);
+    successResponse(res, result, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error listing inventory items', 500);
+  }
+};
+
+export const getInventoryItemByIdController = async (req: Request, res: Response) => {
+  try {
+    const { itemId } = req.params;
+    const item = await getInventoryItemById(itemId);
+    successResponse(res, item, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error retrieving inventory item', 500);
+  }
+};
+
+export const addInventoryItemController = async (req: Request, res: Response) => {
+  try {
+    const { companyId } = req.params;
+    const created = await createInventoryItem(companyId, req.body, req.user?.id || 'system');
+    successResponse(res, created, 200);
+  } catch (error: any) {
+    if (error.message.includes('SKU already exists')) {
+      return errorResponse(res, error.message, 409);
+    }
+    errorResponse(res, 'Error creating inventory item', 500);
+  }
+};
+
+export const updateInventoryItemController = async (req: Request, res: Response) => {
+  try {
+    const { itemId } = req.params;
+    const updated = await updateInventoryItem(itemId, req.body, req.user?.id || 'system');
+    successResponse(res, updated, 200);
+  } catch (error: any) {
+    if (error.message.includes('SKU already exists')) {
+      return errorResponse(res, error.message, 409);
+    }
+    errorResponse(res, 'Error updating inventory item', 500);
+  }
+};
+
+export const deleteInventoryItemController = async (req: Request, res: Response) => {
+  try {
+    const { itemId } = req.params;
+    const deleted = await deleteInventoryItem(itemId, req.user?.id || 'system');
+    successResponse(res, deleted, 200);
+  } catch (error: any) {
+    errorResponse(res, 'Error deleting inventory item', 500);
+  }
+};
+
+export const bulkCreateInventoryItemsController = async (req: Request, res: Response) => {
+  try {
+    const { companyId } = req.params;
+    const items = req.body.items || req.body; // Accept either {items: [...]} or directly [...]
+    
+    if (!Array.isArray(items)) {
+      return errorResponse(res, 'Request body must be an array of items or {items: [...]}', 400);
+    }
+
+    if (items.length === 0) {
+      return errorResponse(res, 'At least one item is required', 400);
+    }
+
+    const result = await bulkCreateInventoryItems(companyId, items, req.user?.id || 'system');
+    successResponse(res, result, 201);
+  } catch (error: any) {
+    if (error.message.includes('SKU')) {
+      return errorResponse(res, error.message, 409);
+    }
+    errorResponse(res, 'Error bulk creating inventory items', 500);
   }
 };
