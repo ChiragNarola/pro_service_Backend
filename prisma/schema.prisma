@@ -695,3 +695,43 @@ model InventorySerial {
 
   @@index([itemId])
 }
+
+model State {
+  id           String    @id @default(uuid()) @db.Uuid
+  name         String    @db.VarChar(100)
+  code         String?   @db.VarChar(10)
+  isActive     Boolean   @default(true)
+  createdBy    String    @db.VarChar(100)
+  createdDate  DateTime  @default(now())
+  modifiedBy   String?   @db.VarChar(100)
+  modifiedDate DateTime?
+  deletedBy    String?   @db.VarChar(100)
+  deletedDate  DateTime?
+  isDeleted    Boolean   @default(false)
+  cities       City[]
+
+  @@unique([name])
+  @@index([name])
+  @@index([isActive])
+}
+
+model City {
+  id           String    @id @default(uuid()) @db.Uuid
+  stateId      String    @db.Uuid
+  name         String    @db.VarChar(100)
+  code         String?   @db.VarChar(10)
+  isActive     Boolean   @default(true)
+  createdBy    String    @db.VarChar(100)
+  createdDate  DateTime  @default(now())
+  modifiedBy   String?   @db.VarChar(100)
+  modifiedDate DateTime?
+  deletedBy    String?   @db.VarChar(100)
+  deletedDate  DateTime?
+  isDeleted    Boolean   @default(false)
+  state        State     @relation(fields: [stateId], references: [id])
+
+  @@unique([stateId, name])
+  @@index([stateId])
+  @@index([name])
+  @@index([isActive])
+}

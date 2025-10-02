@@ -312,16 +312,219 @@ async function main() {
         ],
         skipDuplicates: true,
     });
+
     const superAdminUser = await prisma.user.findFirst({
         where: { roleId: superAdminRole?.id },
     });
-   
+
     await prisma.systemSettings.createMany({
         data: [
-            { userId: superAdminUser?.id, emailNotifications: false, smsNotifications: false, paymentGateway: PaymentGateway.Stripe, createdBy: 'system', billingCurrency: 'USD', billingInvoicePrefix: 'INV-', billingTaxRate: 0, primaryColor: '#0ea5e9', secondaryColor: '#64748b',  brandingLogo: null, supportEmail: 'support@mailsac.com', supportAutoAssign: true, supportSlaHours: 24, supportAutoReply: true, stripePubKey: '', stripeSecretKey: '' },
+            { userId: superAdminUser?.id, emailNotifications: false, smsNotifications: false, paymentGateway: PaymentGateway.Stripe, createdBy: 'system', billingCurrency: 'USD', billingInvoicePrefix: 'INV-', billingTaxRate: 0, primaryColor: '#0ea5e9', secondaryColor: '#64748b', brandingLogo: null, supportEmail: 'support@mailsac.com', supportAutoAssign: true, supportSlaHours: 24, supportAutoReply: true, stripePubKey: '', stripeSecretKey: '' },
         ],
         skipDuplicates: true,
     });
+
+    const US_STATES = [
+        { name: 'Alabama', code: 'AL' },
+        { name: 'Alaska', code: 'AK' },
+        { name: 'Arizona', code: 'AZ' },
+        { name: 'Arkansas', code: 'AR' },
+        { name: 'California', code: 'CA' },
+        { name: 'Colorado', code: 'CO' },
+        { name: 'Connecticut', code: 'CT' },
+        { name: 'Delaware', code: 'DE' },
+        { name: 'Florida', code: 'FL' },
+        { name: 'Georgia', code: 'GA' },
+        { name: 'Hawaii', code: 'HI' },
+        { name: 'Idaho', code: 'ID' },
+        { name: 'Illinois', code: 'IL' },
+        { name: 'Indiana', code: 'IN' },
+        { name: 'Iowa', code: 'IA' },
+        { name: 'Kansas', code: 'KS' },
+        { name: 'Kentucky', code: 'KY' },
+        { name: 'Louisiana', code: 'LA' },
+        { name: 'Maine', code: 'ME' },
+        { name: 'Maryland', code: 'MD' },
+        { name: 'Massachusetts', code: 'MA' },
+        { name: 'Michigan', code: 'MI' },
+        { name: 'Minnesota', code: 'MN' },
+        { name: 'Mississippi', code: 'MS' },
+        { name: 'Missouri', code: 'MO' },
+        { name: 'Montana', code: 'MT' },
+        { name: 'Nebraska', code: 'NE' },
+        { name: 'Nevada', code: 'NV' },
+        { name: 'New Hampshire', code: 'NH' },
+        { name: 'New Jersey', code: 'NJ' },
+        { name: 'New Mexico', code: 'NM' },
+        { name: 'New York', code: 'NY' },
+        { name: 'North Carolina', code: 'NC' },
+        { name: 'North Dakota', code: 'ND' },
+        { name: 'Ohio', code: 'OH' },
+        { name: 'Oklahoma', code: 'OK' },
+        { name: 'Oregon', code: 'OR' },
+        { name: 'Pennsylvania', code: 'PA' },
+        { name: 'Rhode Island', code: 'RI' },
+        { name: 'South Carolina', code: 'SC' },
+        { name: 'South Dakota', code: 'SD' },
+        { name: 'Tennessee', code: 'TN' },
+        { name: 'Texas', code: 'TX' },
+        { name: 'Utah', code: 'UT' },
+        { name: 'Vermont', code: 'VT' },
+        { name: 'Virginia', code: 'VA' },
+        { name: 'Washington', code: 'WA' },
+        { name: 'West Virginia', code: 'WV' },
+        { name: 'Wisconsin', code: 'WI' },
+        { name: 'Wyoming', code: 'WY' },
+        { name: 'District of Columbia', code: 'DC' }
+    ];
+
+    console.log("Seeding US states...");
+    await prisma.state.createMany({
+        data: US_STATES.map(state => ({
+            name: state.name,
+            code: state.code,
+            isActive: true,
+            createdBy: 'system'
+        })),
+        skipDuplicates: true,
+    });
+
+    const US_STATES_DATA = await prisma.state.findMany({
+        select: {
+            id: true,
+            name: true,
+            code: true,
+        }
+    });
+
+    // Major US cities data
+    const US_CITIES = [
+        // Alabama
+        { stateCode: 'AL', cities: ['Birmingham', 'Montgomery', 'Mobile', 'Huntsville', 'Tuscaloosa'] },
+        // Alaska
+        { stateCode: 'AK', cities: ['Anchorage', 'Fairbanks', 'Juneau', 'Sitka', 'Ketchikan'] },
+        // Arizona
+        { stateCode: 'AZ', cities: ['Phoenix', 'Tucson', 'Mesa', 'Chandler', 'Scottsdale', 'Glendale', 'Gilbert', 'Tempe', 'Peoria', 'Surprise'] },
+        // Arkansas
+        { stateCode: 'AR', cities: ['Little Rock', 'Fort Smith', 'Fayetteville', 'Springdale', 'Jonesboro'] },
+        // California
+        { stateCode: 'CA', cities: ['Los Angeles', 'San Diego', 'San Jose', 'San Francisco', 'Fresno', 'Sacramento', 'Long Beach', 'Oakland', 'Bakersfield', 'Anaheim', 'Santa Ana', 'Riverside', 'Stockton', 'Irvine', 'Chula Vista', 'Fremont', 'San Bernardino', 'Modesto', 'Fontana', 'Oxnard'] },
+        // Colorado
+        { stateCode: 'CO', cities: ['Denver', 'Colorado Springs', 'Aurora', 'Fort Collins', 'Lakewood', 'Thornton', 'Westminster', 'Pueblo', 'Arvada', 'Centennial'] },
+        // Connecticut
+        { stateCode: 'CT', cities: ['Bridgeport', 'New Haven', 'Hartford', 'Stamford', 'Waterbury', 'Norwalk', 'Danbury', 'New Britain', 'West Hartford', 'Greenwich'] },
+        // Delaware
+        { stateCode: 'DE', cities: ['Wilmington', 'Dover', 'Newark', 'Middletown', 'Smyrna'] },
+        // Florida
+        { stateCode: 'FL', cities: ['Jacksonville', 'Miami', 'Tampa', 'Orlando', 'St. Petersburg', 'Hialeah', 'Tallahassee', 'Fort Lauderdale', 'Port St. Lucie', 'Cape Coral', 'Pembroke Pines', 'Hollywood', 'Miramar', 'Gainesville', 'Coral Springs'] },
+        // Georgia
+        { stateCode: 'GA', cities: ['Atlanta', 'Augusta', 'Columbus', 'Savannah', 'Athens', 'Sandy Springs', 'Roswell', 'Macon', 'Johns Creek', 'Albany'] },
+        // Hawaii
+        { stateCode: 'HI', cities: ['Honolulu', 'Pearl City', 'Hilo', 'Kailua', 'Kaneohe'] },
+        // Idaho
+        { stateCode: 'ID', cities: ['Boise', 'Nampa', 'Meridian', 'Idaho Falls', 'Pocatello'] },
+        // Illinois
+        { stateCode: 'IL', cities: ['Chicago', 'Aurora', 'Rockford', 'Joliet', 'Naperville', 'Springfield', 'Peoria', 'Elgin', 'Waukegan', 'Cicero', 'Champaign', 'Bloomington', 'Arlington Heights', 'Evanston', 'Decatur'] },
+        // Indiana
+        { stateCode: 'IN', cities: ['Indianapolis', 'Fort Wayne', 'Evansville', 'South Bend', 'Carmel', 'Fishers', 'Bloomington', 'Hammond', 'Gary', 'Muncie'] },
+        // Iowa
+        { stateCode: 'IA', cities: ['Des Moines', 'Cedar Rapids', 'Davenport', 'Sioux City', 'Iowa City', 'Waterloo', 'Council Bluffs', 'Ames', 'West Des Moines', 'Dubuque'] },
+        // Kansas
+        { stateCode: 'KS', cities: ['Wichita', 'Overland Park', 'Kansas City', 'Topeka', 'Olathe', 'Lawrence', 'Shawnee', 'Manhattan', 'Lenexa', 'Salina'] },
+        // Kentucky
+        { stateCode: 'KY', cities: ['Louisville', 'Lexington', 'Bowling Green', 'Owensboro', 'Covington', 'Hopkinsville', 'Richmond', 'Florence', 'Georgetown', 'Henderson'] },
+        // Louisiana
+        { stateCode: 'LA', cities: ['New Orleans', 'Baton Rouge', 'Shreveport', 'Lafayette', 'Lake Charles', 'Kenner', 'Bossier City', 'Monroe', 'Alexandria', 'Houma'] },
+        // Maine
+        { stateCode: 'ME', cities: ['Portland', 'Lewiston', 'Bangor', 'South Portland', 'Auburn', 'Biddeford', 'Sanford', 'Saco', 'Augusta', 'Westbrook'] },
+        // Maryland
+        { stateCode: 'MD', cities: ['Baltimore', 'Frederick', 'Rockville', 'Gaithersburg', 'Bowie', 'Annapolis', 'College Park', 'Salisbury', 'Laurel', 'Greenbelt'] },
+        // Massachusetts
+        { stateCode: 'MA', cities: ['Boston', 'Worcester', 'Springfield', 'Cambridge', 'Lowell', 'Brockton', 'New Bedford', 'Quincy', 'Lynn', 'Newton'] },
+        // Michigan
+        { stateCode: 'MI', cities: ['Detroit', 'Grand Rapids', 'Warren', 'Sterling Heights', 'Lansing', 'Ann Arbor', 'Flint', 'Dearborn', 'Livonia', 'Westland'] },
+        // Minnesota
+        { stateCode: 'MN', cities: ['Minneapolis', 'Saint Paul', 'Rochester', 'Duluth', 'Bloomington', 'Brooklyn Park', 'Plymouth', 'Saint Cloud', 'Eagan', 'Woodbury'] },
+        // Mississippi
+        { stateCode: 'MS', cities: ['Jackson', 'Gulfport', 'Southaven', 'Hattiesburg', 'Biloxi', 'Meridian', 'Tupelo', 'Greenville', 'Olive Branch', 'Horn Lake'] },
+        // Missouri
+        { stateCode: 'MO', cities: ['Kansas City', 'Saint Louis', 'Springfield', 'Independence', 'Columbia', 'Lee\'s Summit', 'O\'Fallon', 'Saint Joseph', 'Saint Charles', 'Saint Peters'] },
+        // Montana
+        { stateCode: 'MT', cities: ['Billings', 'Missoula', 'Great Falls', 'Bozeman', 'Butte', 'Helena', 'Kalispell', 'Havre', 'Anaconda', 'Miles City'] },
+        // Nebraska
+        { stateCode: 'NE', cities: ['Omaha', 'Lincoln', 'Bellevue', 'Grand Island', 'Kearney', 'Fremont', 'Hastings', 'North Platte', 'Norfolk', 'Columbus'] },
+        // Nevada
+        { stateCode: 'NV', cities: ['Las Vegas', 'Henderson', 'Reno', 'North Las Vegas', 'Sparks', 'Carson City', 'Fernley', 'Elko', 'Mesquite', 'Boulder City'] },
+        // New Hampshire
+        { stateCode: 'NH', cities: ['Manchester', 'Nashua', 'Concord', 'Derry', 'Rochester', 'Dover', 'Salem', 'Keene', 'Londonderry', 'Hudson'] },
+        // New Jersey
+        { stateCode: 'NJ', cities: ['Newark', 'Jersey City', 'Paterson', 'Elizabeth', 'Edison', 'Woodbridge', 'Lakewood', 'Toms River', 'Hamilton', 'Trenton'] },
+        // New Mexico
+        { stateCode: 'NM', cities: ['Albuquerque', 'Las Cruces', 'Rio Rancho', 'Santa Fe', 'Roswell', 'Farmington', 'Clovis', 'Hobbs', 'Alamogordo', 'Carlsbad'] },
+        // New York
+        { stateCode: 'NY', cities: ['New York City', 'Buffalo', 'Rochester', 'Yonkers', 'Syracuse', 'Albany', 'New Rochelle', 'Mount Vernon', 'Schenectady', 'Utica'] },
+        // North Carolina
+        { stateCode: 'NC', cities: ['Charlotte', 'Raleigh', 'Greensboro', 'Durham', 'Winston-Salem', 'Fayetteville', 'Cary', 'Wilmington', 'High Point', 'Concord'] },
+        // North Dakota
+        { stateCode: 'ND', cities: ['Fargo', 'Bismarck', 'Grand Forks', 'Minot', 'West Fargo', 'Williston', 'Dickinson', 'Mandan', 'Jamestown', 'Wahpeton'] },
+        // Ohio
+        { stateCode: 'OH', cities: ['Columbus', 'Cleveland', 'Cincinnati', 'Toledo', 'Akron', 'Dayton', 'Parma', 'Canton', 'Youngstown', 'Lorain'] },
+        // Oklahoma
+        { stateCode: 'OK', cities: ['Oklahoma City', 'Tulsa', 'Norman', 'Broken Arrow', 'Lawton', 'Edmond', 'Moore', 'Midwest City', 'Enid', 'Stillwater'] },
+        // Oregon
+        { stateCode: 'OR', cities: ['Portland', 'Salem', 'Eugene', 'Gresham', 'Hillsboro', 'Bend', 'Beaverton', 'Medford', 'Springfield', 'Corvallis'] },
+        // Pennsylvania
+        { stateCode: 'PA', cities: ['Philadelphia', 'Pittsburgh', 'Allentown', 'Erie', 'Reading', 'Scranton', 'Bethlehem', 'Lancaster', 'Harrisburg', 'Altoona'] },
+        // Rhode Island
+        { stateCode: 'RI', cities: ['Providence', 'Warwick', 'Cranston', 'Pawtucket', 'East Providence', 'Woonsocket', 'Newport', 'Central Falls', 'Westerly', 'Cumberland'] },
+        // South Carolina
+        { stateCode: 'SC', cities: ['Columbia', 'Charleston', 'North Charleston', 'Mount Pleasant', 'Rock Hill', 'Greenville', 'Summerville', 'Sumter', 'Hilton Head Island', 'Spartanburg'] },
+        // South Dakota
+        { stateCode: 'SD', cities: ['Sioux Falls', 'Rapid City', 'Aberdeen', 'Brookings', 'Watertown', 'Mitchell', 'Yankton', 'Pierre', 'Huron', 'Vermillion'] },
+        // Tennessee
+        { stateCode: 'TN', cities: ['Nashville', 'Memphis', 'Knoxville', 'Chattanooga', 'Clarksville', 'Murfreesboro', 'Franklin', 'Jackson', 'Johnson City', 'Bartlett'] },
+        // Texas
+        { stateCode: 'TX', cities: ['Houston', 'San Antonio', 'Dallas', 'Austin', 'Fort Worth', 'El Paso', 'Arlington', 'Corpus Christi', 'Plano', 'Lubbock', 'Laredo', 'Lubbock', 'Garland', 'Irving', 'Amarillo', 'Grand Prairie', 'Brownsville', 'Pasadena', 'Mesquite', 'McKinney'] },
+        // Utah
+        { stateCode: 'UT', cities: ['Salt Lake City', 'West Valley City', 'Provo', 'West Jordan', 'Orem', 'Sandy', 'Ogden', 'St. George', 'Layton', 'Taylorsville'] },
+        // Vermont
+        { stateCode: 'VT', cities: ['Burlington', 'Essex', 'South Burlington', 'Colchester', 'Rutland', 'Montpelier', 'Barre', 'St. Albans', 'Winooski', 'Brattleboro'] },
+        // Virginia
+        { stateCode: 'VA', cities: ['Virginia Beach', 'Norfolk', 'Chesapeake', 'Richmond', 'Newport News', 'Alexandria', 'Hampton', 'Portsmouth', 'Suffolk', 'Roanoke'] },
+        // Washington
+        { stateCode: 'WA', cities: ['Seattle', 'Spokane', 'Tacoma', 'Vancouver', 'Bellevue', 'Kent', 'Everett', 'Renton', 'Yakima', 'Federal Way'] },
+        // West Virginia
+        { stateCode: 'WV', cities: ['Charleston', 'Huntington', 'Parkersburg', 'Morgantown', 'Wheeling', 'Martinsburg', 'Fairmont', 'Beckley', 'Clarksburg', 'South Charleston'] },
+        // Wisconsin
+        { stateCode: 'WI', cities: ['Milwaukee', 'Madison', 'Green Bay', 'Kenosha', 'Racine', 'Appleton', 'Waukesha', 'Oshkosh', 'Eau Claire', 'Janesville'] },
+        // Wyoming
+        { stateCode: 'WY', cities: ['Cheyenne', 'Casper', 'Laramie', 'Gillette', 'Rock Springs', 'Sheridan', 'Green River', 'Evanston', 'Riverton', 'Jackson'] },
+        // District of Columbia
+        { stateCode: 'DC', cities: ['Washington'] }
+    ];
+
+    console.log("Seeding US cities...");
+    
+    // Create cities for each state
+    for (const stateData of US_CITIES) {
+        const state = US_STATES_DATA.find(s => s.code === stateData.stateCode);
+        if (state) {
+            const citiesData = stateData.cities.map(cityName => ({
+                stateId: state.id,
+                name: cityName,
+                isActive: true,
+                createdBy: 'system'
+            }));
+
+            await prisma.city.createMany({
+                data: citiesData,
+                skipDuplicates: true,
+            });
+
+            console.log(`✅ Created ${citiesData.length} cities for ${state.name}`);
+        }
+    }
+
 }
 
 main()
