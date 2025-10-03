@@ -20,6 +20,7 @@ model Role {
   isDeleted    Boolean   @default(false)
   companyId    String?   @db.Uuid
   users        User[]
+  rolePermissions RolePermission[]
 
   @@index([createdBy])
   @@index([modifiedBy])
@@ -54,6 +55,7 @@ model User {
   employeeDetail         EmployeeDetail[]
   systemSettings         SystemSettings[]
   role                   Role?               @relation(fields: [roleId], references: [id])
+  rolePermissions        RolePermission[]
 
   @@index([email])
   @@index([roleId])
@@ -62,6 +64,53 @@ model User {
   @@index([createdBy])
   @@index([modifiedBy])
   @@index([deletedBy])
+}
+model Permission {
+  id           String            @id @default(uuid()) @db.Uuid
+  name         String            @unique @db.VarChar(150)
+  description  String?           @db.VarChar(500)
+  module       String?           @db.VarChar(100)
+  isActive     Boolean           @default(true)
+  createdBy    String            @db.VarChar(100)
+  createdDate  DateTime          @default(now())
+  modifiedBy   String?           @db.VarChar(100)
+  modifiedDate DateTime?
+  deletedBy    String?           @db.VarChar(100)
+  deletedDate  DateTime?
+  isDeleted    Boolean           @default(false)
+  rolePermissions RolePermission[]
+
+  @@index([name])
+  @@index([module])
+  @@index([isActive])
+}
+
+model RolePermission {
+  id           String      @id @default(uuid()) @db.Uuid
+  roleId       String      @db.Uuid
+  permissionId String      @db.Uuid
+  userId       String?     @db.Uuid
+  canCreate    Boolean     @default(false)
+  canRead      Boolean     @default(false)
+  canUpdate    Boolean     @default(false)
+  canDelete    Boolean     @default(false)
+  isActive     Boolean     @default(true)
+  createdBy    String      @db.VarChar(100)
+  createdDate  DateTime    @default(now())
+  modifiedBy   String?     @db.VarChar(100)
+  modifiedDate DateTime?
+  deletedBy    String?     @db.VarChar(100)
+  deletedDate  DateTime?
+  isDeleted    Boolean     @default(false)
+  role         Role        @relation(fields: [roleId], references: [id])
+  permission   Permission  @relation(fields: [permissionId], references: [id])
+  user         User?       @relation(fields: [userId], references: [id])
+
+  @@unique([roleId, permissionId, userId])
+  @@index([roleId])
+  @@index([permissionId])
+  @@index([userId])
+  @@map("RolePermission")
 }
 
 model Module {
@@ -84,7 +133,7 @@ model Module {
 
 model Subscription {
   id                 String              @id @default(uuid()) @db.Uuid
-  planName           String              @db.VarChar(100)
+  planName           String              @unique @db.VarChar(100)
   duration           SubscriptionType
   rate               Float
   isActive           Boolean             @default(true)
@@ -276,6 +325,7 @@ model EmployeeDetail {
   isDeleted      Boolean          @default(false)
   managerId      String?          @db.Uuid
   salary         String?          @db.VarChar(100)
+  salaryType     SalaryType?      @default(Salary)
   skills         String?          @db.VarChar(100)
   eid            String?          @db.VarChar(100)
   employeeStatus UserStatus       @default(Active)
@@ -325,7 +375,7 @@ model ClientDetail {
 
 model Services {
   id             String          @id @default(uuid()) @db.Uuid
-  serviceName    String          @db.VarChar(100)
+  serviceName    String          @unique @db.VarChar(100)
   createdBy      String          @db.VarChar(100)
   createdDate    DateTime        @default(now())
   modifiedBy     String?         @db.VarChar(100)
@@ -448,7 +498,7 @@ model CompanyInvoiceTemplate {
 
 model SystemSettings {
   id                 String         @id @default(uuid()) @db.Uuid
-  userId             String?        @db.Uuid
+  userId             String?        @unique @db.Uuid
   emailNotifications Boolean        @default(true)
   smsNotifications   Boolean        @default(false)
   pushNotifications  Boolean        @default(false)
@@ -516,6 +566,11 @@ enum PaymentGateway {
   Stripe @map("Stripe")
   PayPal @map("PayPal")
   Square @map("Square")
+}
+
+enum SalaryType {
+  Salary @map("Salary")
+  Hourly @map("Hourly")
 }
 
 /// Notification system for company-level automated rules

@@ -204,5 +204,3 @@ export const updateEmployee = async (input: EmployeeUpdate): Promise<object> => 
     });
     return EmployeeData ?? {}
 };
-
-

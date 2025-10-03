@@ -96,6 +96,86 @@ async function main() {
         skipDuplicates: true,
     });
 
+    console.log("Seeding permissions...");
+    const permissions = [
+        { name: 'company.read', description: 'Read company details', module: 'Company' },
+        { name: 'company.update', description: 'Update company details', module: 'Company' },
+        { name: 'company.delete', description: 'Delete company details', module: 'Company' },
+        { name: 'employee.read', description: 'Read employee details', module: 'User' },
+        { name: 'employee.create', description: 'Create employee details', module: 'User' },
+        { name: 'employee.update', description: 'Update employee details', module: 'User' },
+        { name: 'employee.delete', description: 'Delete employee details', module: 'User' },
+        { name: 'inventory.read', description: 'Read inventory', module: 'Inventory' },
+        { name: 'inventory.create', description: 'Create inventory', module: 'Inventory' },
+        { name: 'inventory.update', description: 'Update inventory', module: 'Inventory' },
+        { name: 'inventory.delete', description: 'Delete inventory', module: 'Inventory' },
+        { name: 'billing.read', description: 'Read billing details', module: 'Billing' },
+        { name: 'billing.create', description: 'Create billing details', module: 'Billing' },
+        { name: 'billing.update', description: 'Update billing details', module: 'Billing' },
+        { name: 'billing.delete', description: 'Delete billing details', module: 'Billing' },
+        { name: 'job.read', description: 'Read job details', module: 'Job' },
+        { name: 'job.create', description: 'Create job details', module: 'Job' },
+        { name: 'job.update', description: 'Update job details', module: 'Job' },
+        { name: 'job.delete', description: 'Delete job details', module: 'Job' },
+        { name: 'client.read', description: 'Read client details', module: 'Client' },
+        { name: 'client.create', description: 'Create client details', module: 'Client' },
+        { name: 'client.update', description: 'Update client details', module: 'Client' },
+        { name: 'client.delete', description: 'Delete client details', module: 'Client' },
+        { name: 'financial.read', description: 'Read financial details', module: 'Financial' },
+        { name: 'financial.create', description: 'Create financial details', module: 'Financial' },
+        { name: 'financial.update', description: 'Update financial details', module: 'Financial' },
+        { name: 'financial.delete', description: 'Delete financial details', module: 'Financial' },
+    ];
+    await (prisma as any).permission.createMany({
+        data: permissions.map(p => ({ ...p, createdBy: 'system' })),
+        skipDuplicates: true,
+    });
+
+    const allPermissions = await (prisma as any).permission.findMany({ select: { id: true, name: true } });
+    const permByName = Object.fromEntries(allPermissions.map(p => [p.name, p.id]));
+
+    console.log("Mapping role permissions...");
+    const roles = await prisma.role.findMany({ select: { id: true, name: true } });
+
+    // Default grants per role
+    const grants: Record<string, Array<{ name: string; crud: [boolean, boolean, boolean, boolean] }>> = {
+        SuperAdmin: permissions.map(p => ({ name: p.name, crud: [true, true, true, true] })),
+        Company: [
+            { name: 'company.read', crud: [false, true, false, false] },
+            { name: 'user.create', crud: [true, false, false, false] },
+            { name: 'inventory.create', crud: [true, false, false, false] },
+        ],
+        Manager: [
+            { name: 'user.read', crud: [false, true, false, false] },
+            { name: 'inventory.create', crud: [true, false, false, false] },
+        ],
+        Client: [
+            { name: 'company.read', crud: [false, true, false, false] },
+        ],
+        Employee: [
+            { name: 'inventory.read', crud: [false, true, false, false] },
+        ],
+    };
+
+    for (const role of roles) {
+        const roleGrants = grants[role.name as keyof typeof grants] || [];
+        if (roleGrants.length === 0) continue;
+        const data = roleGrants
+            .filter(g => permByName[g.name])
+            .map(g => ({
+                roleId: role.id,
+                permissionId: permByName[g.name],
+                canCreate: g.crud[0],
+                canRead: g.crud[1],
+                canUpdate: g.crud[2],
+                canDelete: g.crud[3],
+                createdBy: 'system',
+            }));
+        if (data.length > 0) {
+            await (prisma as any).rolePermission.createMany({ data, skipDuplicates: true });
+        }
+    }
+
     console.log("Seeding Subscriptions...");
     await prisma.subscription.createMany({
         data: [
@@ -515,11 +595,12 @@ async function main() {
                 isActive: true,
                 createdBy: 'system'
             }));
+            console.log("🚀 ~ main ~ citiesData:", citiesData)
 
-            await prisma.city.createMany({
-                data: citiesData,
-                skipDuplicates: true,
-            });
+            // await prisma.city.createMany({
+            //     data: citiesData,
+            //     skipDuplicates: true,
+            // });
 
             console.log(`✅ Created ${citiesData.length} cities for ${state.name}`);
         }
